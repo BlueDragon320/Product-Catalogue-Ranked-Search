@@ -1,223 +1,55 @@
-# Product Catalogue Ranked Search: Function & Class Map
+# Function Map — Product Catalogue Ranked Search
 
-This document provides a comprehensive directory of all classes, methods, functions, and configuration objects implemented across the codebase in Phase 1 Foundation.
+> Maps every function/method to its file, line number, FR requirement, feature area, and description.
+> Agents reference this to understand what each function does and where it's used.
 
----
+## Functions
 
-## 1. Application Factory & Routes (`app/__init__.py`)
+| Function | File | Line | FR(s) | Feature | Description |
+|----------|------|------|-------|---------|-------------|
+| create_app() | app/__init__.py | 10 | — | Bootstrap | Flask app factory; initializes extensions, registers blueprints |
+| User.set_password() | app/models.py | 25 | NFR-5.2 | Security | Hashes password using Werkzeug generate_password_hash |
+| User.check_password() | app/models.py | 30 | NFR-5.2 | Security | Verifies password against stored hash |
+| load_user() | app/models.py | 35 | — | Auth | Flask-Login user loader callback |
+| Company.__repr__() | app/models.py | 50 | — | Debug | String representation of Company model |
+| Category.__repr__() | app/models.py | 65 | — | Debug | String representation of Category model |
+| Attribute.__repr__() | app/models.py | 90 | — | Debug | String representation of Attribute model |
+| Product.__repr__() | app/models.py | 115 | — | Debug | String representation of Product model |
+| admin_before_request() | app/admin/routes.py | 10 | FR-19 | Tenant Isolation | Sets g.company_id from current user for data isolation |
+| company_required() | app/admin/routes.py | 15 | FR-19 | Auth | Decorator to check user is assigned to a company |
+| index() | app/admin/routes.py | 35 | FR-20 | Console Routing | Dynamic branching: Superadmin Platform Console vs Company Operations Hub |
+| list_companies() | app/admin/routes.py | 95 | FR-20 | Company Management | Lists companies (all companies for Superadmin, isolated for tenant) |
+| new_company() | app/admin/routes.py | 103 | FR-20 | Account Provisioning | Creates company and provisions initial manager account credentials |
+| edit_company() | app/admin/routes.py | 134 | FR-20 | Company Management | Updates company organization details |
+| delete_company() | app/admin/routes.py | 150 | FR-20 | Platform Admin | Cascade deletes company, categories, products, attributes, sponsors, and users |
+| inspect_company() | app/admin/routes.py | 179 | FR-20 | Platform Admin | Context switcher: allows Superadmin to inspect and manage a selected tenant |
+| exit_inspect() | app/admin/routes.py | 188 | FR-20 | Platform Admin | Clears inspection session and returns Superadmin to platform directory |
+| weight_total() | app/api/routes.py | ... | FR-3, NFR-5.1 | Weight Validation | Returns sum of active weights for a category |
+| weight_validate() | app/api/routes.py | ... | FR-3 | Weight Validation | Validates projected weight total |
+| fetchWeightTotal() | app/static/js/weight_check.js | ... | FR-3 | Weight UI | Fetches weight total from API |
+| calculateLocalTotal() | app/static/js/weight_check.js | ... | FR-3 | Weight UI | Client-side weight sum calculation |
+| list_products() | app/admin/routes.py | ... | FR-7 | Product CRUD | List all products in a category |
+| new_product() | app/admin/routes.py | ... | FR-5, FR-6 | Product CRUD | Add a new product and attributes |
+| edit_product() | app/admin/routes.py | ... | FR-7, FR-8 | Product CRUD | Edit an existing product and attributes |
+| delete_product() | app/admin/routes.py | ... | FR-7 | Product CRUD | Delete a product and its attributes |
+| list_sponsors() | app/admin/routes.py | ... | FR-14 | Sponsorship | List all sponsored placements in a category |
+| new_sponsor() | app/admin/routes.py | ... | FR-14 | Sponsorship | Create a new sponsored placement |
+| edit_sponsor() | app/admin/routes.py | ... | FR-14 | Sponsorship | Edit an existing sponsored placement |
+| delete_sponsor() | app/admin/routes.py | ... | FR-14 | Sponsorship | Delete a sponsored placement |
+| insert_sponsored_placements() | app/ranking/helpers.py | ... | FR-15, NFR-5.6 | Sponsorship Logic | Insert sponsored products into organic rankings |
+| get_active_sponsored_products() | app/ranking/helpers.py | ... | FR-17 | Sponsorship Logic | Get currently active sponsored products |
+| get_sponsor_status() | app/ranking/helpers.py | ... | FR-14, FR-17 | Usability / UI | Computes active/scheduled/expired status, badge class, and message |
+| get_category_stats() | app/ranking/helpers.py | ... | FR-20, FR-3 | Category Hub | Aggregates product count, attribute count, weight total, and sponsor metrics |
+| category_overview() | app/admin/routes.py | ... | FR-20 | Category Hub | Unified category command center view with metrics and quick shortcuts |
+| insights_index() | app/insights/routes.py | 18 | FR-12, FR-19, FR-20 | Insights Engine | Multi-criteria catalog search, search hit telemetry, leaderboard, sponsor ratio checks, and strict multi-tenant isolation |
+| normalize_value() | app/ranking/engine.py | 1 | FR-9, FR-4 | Normalization Engine | Min-Max scaling handling continuous numeric attributes and discrete binary (Yes=1.0, No=0.0) criteria with directionality |
+| superadmin_required() | app/admin/routes.py | 38 | FR-20 | Access Control | Security decorator ensuring platform-level administrative privileges |
+| reset_user_password() | app/admin/routes.py | 170 | FR-20, NFR-5.2 | Account Security | Platform Superadmin route to change any tenant company user's password |
+| get_request_company_id() | app/api/routes.py | 10 | FR-19, FR-21 | B2B API Engine | Extracts and validates tenant company ID from query string, headers, or JSON body |
+| search_products() | app/api/routes.py | 70 | FR-12, FR-13, FR-15, FR-21 | B2B API Engine | Multi-tenant search and ranking REST endpoint with dynamic weights and sponsor interleaving |
+| get_categories() | app/api/routes.py | 290 | FR-2, FR-4, FR-21 | B2B API Engine | Schema endpoint returning categories, attributes, scales, and data types |
+| get_product() | app/api/routes.py | 340 | FR-7, FR-10, FR-21 | B2B API Engine | Product detail endpoint returning composite score, attributes, and mathematical breakdown |
+| UserPasswordResetForm | app/admin/forms.py | 42 | NFR-5.2 | Forms | Form for platform administrator to securely reset tenant operator passwords |
+| test_insights_attribute_range_filter() | tests/test_insights.py | 134 | FR-21 | Automated Testing | Unit test verifying attribute threshold range filtering in insights catalog search |
 
-| Symbol | Type | Line | Parameters | Return Type | Description |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `db` | `SQLAlchemy` | L17 | N/A | `SQLAlchemy` | Global SQLAlchemy database extension instance. |
-| `migrate` | `Migrate` | L18 | N/A | `Migrate` | Flask-Migrate database migration engine instance. |
-| `login_manager` | `LoginManager` | L19 | N/A | `LoginManager` | Flask-Login session management handler instance. |
-| `main_bp` | `Blueprint` | L26 | `name='main'`, `import_name=__name__` | `Blueprint` | Core application blueprint serving public landing routes. |
-| `index()` | Function | L28–L31 | None | `str` (HTML) | Handles `GET /`. Renders and returns `templates/index.html`. |
-| `create_app()` | Function | L34–L93 | `config_name: str = 'development'` | `Flask` | Application factory. Loads configuration, initializes extensions, creates database tables, registers blueprints dynamically, and returns the configured Flask instance. |
 
----
-
-## 2. Configuration Profiles (`config.py`)
-
-| Class / Object | Inherits | Line | Key Attributes | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `BaseConfig` | `object` | L5–L7 | `SECRET_KEY`, `SQLALCHEMY_TRACK_MODIFICATIONS` | Base configuration containing default settings shared across environments. |
-| `DevelopmentConfig`| `BaseConfig` | L9–L12 | `DEBUG = True`, `SQLALCHEMY_DATABASE_URI = .../instance/ranking_engine.db` | Development profile configuring local SQLite database storage and active debug reload. |
-| `TestingConfig` | `BaseConfig` | L14–L18 | `TESTING = True`, `WTF_CSRF_ENABLED = False`, `SQLALCHEMY_DATABASE_URI = sqlite:///:memory:` | Test profile configuring in-memory SQLite database and disabled CSRF validation for automated test execution. |
-| `ProductionConfig` | `BaseConfig` | L20–L23 | `DEBUG = False`, `SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')` | Production profile with debug disabled and production database connection string resolution. |
-| `config` | `dict` | L25–L30 | `'development'`, `'testing'`, `'production'`, `'default'` | Environment-to-class configuration mapping dictionary used by `create_app()`. |
-
----
-
-## 3. Application Entrypoint (`run.py`)
-
-| Symbol | Type | Line | Parameters | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `app` | `Flask` | L4 | None | Top-level Flask application instance initialized via `create_app(os.getenv('FLASK_CONFIG') or 'development')`. |
-| `app.run()` | Method | L7 | `debug=True`, `port=5000` | Starts the WSGI development server on `http://127.0.0.1:5000/`. |
-
----
-
-## 4. Relational Data Models (`app/models.py`)
-
-### 4.1 `Company`
-
-- **File**: `app/models.py` (L6–L19)
-- **Table**: `companies`
-- **Inherits**: `db.Model`
-- **Description**: Represents a tenant organization using the multi-tenant ranking platform.
-
-| Attribute / Method | Type | Description |
-| :--- | :--- | :--- |
-| `company_id` | `db.Column(db.Integer, primary_key=True)` | Primary key identifier for the tenant company. |
-| `name` | `db.Column(db.String(100), nullable=False)` | Organization or tenant brand name. |
-| `created_at` | `db.Column(db.DateTime, default=datetime.utcnow)` | UTC timestamp of company record creation. |
-| `users` | `db.relationship('User', backref='company', lazy='dynamic')` | Dynamic relationship yielding users associated with this tenant. |
-| `categories` | `db.relationship('Category', backref='company', lazy='dynamic')` | Dynamic relationship yielding categories owned by this tenant. |
-| `__repr__()` | Method (`-> str`) | Returns `<Company {name}>`. |
-
----
-
-### 4.2 `User`
-
-- **File**: `app/models.py` (L21–L45)
-- **Table**: `users`
-- **Inherits**: `flask_login.UserMixin`, `db.Model`
-- **Description**: Authenticated user account with role-based flags and tenant association.
-
-| Attribute / Method | Type | Description |
-| :--- | :--- | :--- |
-| `id` | `db.Column(db.Integer, primary_key=True)` | Primary key identifier for the user. |
-| `username` | `db.Column(db.String(64), unique=True, index=True, nullable=False)` | Unique login username. |
-| `email` | `db.Column(db.String(120), unique=True, index=True, nullable=False)`| Unique user email address. |
-| `password_hash` | `db.Column(db.String(128))` | Werkzeug salted hash of user password. |
-| `company_id` | `db.Column(db.Integer, db.ForeignKey('companies.company_id'), index=True)` | Foreign key reference linking user to tenant company. |
-| `is_admin` | `db.Column(db.Boolean, default=False)` | Administrative privileges within assigned company. |
-| `is_superadmin`| `db.Column(db.Boolean, default=False)` | Platform-wide administrative privileges. |
-| `created_at` | `db.Column(db.DateTime, default=datetime.utcnow)` | UTC timestamp of user account registration. |
-| `set_password(password: str)` | Method (`-> None`) | Computes and stores salted hash using `werkzeug.security.generate_password_hash`. |
-| `check_password(password: str)` | Method (`-> bool`) | Verifies raw password against stored hash using `werkzeug.security.check_password_hash`. |
-| `__repr__()` | Method (`-> str`) | Returns `<User {username}>`. |
-
----
-
-### 4.3 `load_user()`
-
-- **File**: `app/models.py` (L46–L49)
-- **Decorator**: `@login_manager.user_loader`
-- **Parameters**: `user_id: str | int`
-- **Return Type**: `User | None`
-- **Description**: Flask-Login user callback. Queries and returns the active `User` record given the session user ID.
-
----
-
-### 4.4 `Category`
-
-- **File**: `app/models.py` (L51–L65)
-- **Table**: `categories`
-- **Inherits**: `db.Model`
-- **Description**: Product category taxonomy owned by a specific tenant company.
-
-| Attribute / Method | Type | Description |
-| :--- | :--- | :--- |
-| `category_id` | `db.Column(db.Integer, primary_key=True)` | Primary key identifier for the category. |
-| `company_id` | `db.Column(db.Integer, db.ForeignKey('companies.company_id'), index=True)` | Foreign key linking category to its tenant company. |
-| `name` | `db.Column(db.String(100), nullable=False)` | Category name (e.g. "Laptops", "Smartphones"). |
-| `created_at` | `db.Column(db.DateTime, default=datetime.utcnow)` | UTC timestamp of category creation. |
-| `attributes` | `db.relationship('Attribute', backref='category', lazy='dynamic')` | Dynamic relationship yielding ranking attributes in this category. |
-| `products` | `db.relationship('Product', backref='category', lazy='dynamic')` | Dynamic relationship yielding products belonging to this category. |
-| `__repr__()` | Method (`-> str`) | Returns `<Category {name}>`. |
-
----
-
-### 4.5 `Attribute`
-
-- **File**: `app/models.py` (L67–L85)
-- **Table**: `attributes`
-- **Inherits**: `db.Model`
-- **Description**: Scoring criteria defined for a category, specifying data type, boundaries, default weight, and directionality.
-
-| Attribute / Method | Type | Description |
-| :--- | :--- | :--- |
-| `attribute_id` | `db.Column(db.Integer, primary_key=True)` | Primary key identifier for the attribute. |
-| `category_id` | `db.Column(db.Integer, db.ForeignKey('categories.category_id'), index=True)` | Foreign key linking attribute to its category. |
-| `name` | `db.Column(db.String(100), nullable=False)` | Attribute label (e.g. "Price", "RAM", "Battery"). |
-| `data_type` | `db.Column(db.String(50), default='numeric')` | Data type (`numeric` or `binary`). |
-| `min_value` | `db.Column(db.Float)` | Expected minimum boundary for scaling. |
-| `max_value` | `db.Column(db.Float)` | Expected maximum boundary for scaling. |
-| `weight` | `db.Column(db.Float, default=1.0)` | Default weight allocation percentage in category ranking. |
-| `lower_is_better` | `db.Column(db.Boolean, default=False)` | Directional polarity flag. If `True`, lower raw values yield higher normalized scores. |
-| `is_active` | `db.Column(db.Boolean, default=True)` | Flag enabling or disabling attribute participation in scoring. |
-| `created_at` | `db.Column(db.DateTime, default=datetime.utcnow)` | UTC timestamp of attribute registration. |
-| `__repr__()` | Method (`-> str`) | Returns `<Attribute {name}>`. |
-
----
-
-### 4.6 `Product`
-
-- **File**: `app/models.py` (L87–L105)
-- **Table**: `products`
-- **Inherits**: `db.Model`
-- **Description**: Core inventory entity belonging to a category, ranked dynamically across attribute values.
-
-| Attribute / Method | Type | Description |
-| :--- | :--- | :--- |
-| `product_id` | `db.Column(db.Integer, primary_key=True)` | Primary key identifier for the product. |
-| `category_id` | `db.Column(db.Integer, db.ForeignKey('categories.category_id'), index=True)` | Foreign key linking product to its category. |
-| `name` | `db.Column(db.String(200), nullable=False)` | Product title or commercial model name. |
-| `composite_score` | `db.Column(db.Float, default=0.0)` | Cached or calculated multi-criteria composite score \([0.0, 1.0]\). |
-| `search_count` | `db.Column(db.Integer, default=0)` | Query impression counter. |
-| `is_sponsored` | `db.Column(db.Boolean, default=False)` | Indicator whether product is currently running a sponsored promotion. |
-| `created_at` | `db.Column(db.DateTime, default=datetime.utcnow)` | Creation timestamp (used as Tier 2 tie-breaker). |
-| `updated_at` | `db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)` | Last modification timestamp. |
-| `attribute_values` | `db.relationship('ProductAttrValue', backref='product', lazy='dynamic')` | Dynamic relationship yielding raw and normalized attribute records for this product. |
-| `sponsored_placements` | `db.relationship('SponsoredPlacement', backref='product', lazy='dynamic')` | Dynamic relationship yielding sponsored schedules for this product. |
-| `__repr__()` | Method (`-> str`) | Returns `<Product {name}>`. |
-
----
-
-### 4.7 `ProductAttrValue`
-
-- **File**: `app/models.py` (L107–L123)
-- **Table**: `product_attr_values`
-- **Inherits**: `db.Model`
-- **Description**: Entity-Attribute-Value (EAV) junction table storing raw and normalized metrics for a given product and attribute.
-
-| Attribute / Method | Type | Description |
-| :--- | :--- | :--- |
-| `pav_id` | `db.Column(db.Integer, primary_key=True)` | Primary key identifier for the value record. |
-| `product_id` | `db.Column(db.Integer, db.ForeignKey('products.product_id'), index=True)` | Foreign key reference to target product. |
-| `attribute_id` | `db.Column(db.Integer, db.ForeignKey('attributes.attribute_id'), index=True)` | Foreign key reference to defined attribute. |
-| `raw_value` | `db.Column(db.Float)` | Raw un-normalized metric value (e.g. `1299.99` USD). |
-| `normalized_value` | `db.Column(db.Float)` | Normalized metric value scaled to \([0.0, 1.0]\). |
-| `attribute` | `db.relationship('Attribute', backref='attr_values')` | Direct relation to parent attribute definition. |
-| `__table_args__` | `Tuple` | `UniqueConstraint('product_id', 'attribute_id', name='_product_attr_uc')` enforcing strict one-value-per-attribute policy per product. |
-| `__repr__()` | Method (`-> str`) | Returns `<ProductAttrValue Product:{product_id} Attr:{attribute_id}>`. |
-
----
-
-### 4.8 `SponsoredPlacement`
-
-- **File**: `app/models.py` (L125–L138)
-- **Table**: `sponsored_placements`
-- **Inherits**: `db.Model`
-- **Description**: Date-bounded sponsored placement definition for interleaving products into search positions.
-
-| Attribute / Method | Type | Description |
-| :--- | :--- | :--- |
-| `placement_id` | `db.Column(db.Integer, primary_key=True)` | Primary key identifier for the placement schedule. |
-| `product_id` | `db.Column(db.Integer, db.ForeignKey('products.product_id'), index=True)` | Foreign key reference to promoted product. |
-| `slot_position` | `db.Column(db.Integer, nullable=False)` | Assigned target slot position (e.g. 1, 6, 11). |
-| `start_date` | `db.Column(db.Date, nullable=False)` | Inclusive start date for campaign visibility. |
-| `end_date` | `db.Column(db.Date, nullable=False)` | Inclusive end date for campaign visibility. |
-| `is_active` | `db.Column(db.Boolean, default=True)` | Administrative toggle to activate or suspend campaign. |
-| `__repr__()` | Method (`-> str`) | Returns `<SponsoredPlacement Product:{product_id} Slot:{slot_position}>`. |
-
----
-
-### 4.9 `SearchLog`
-
-- **File**: `app/models.py` (L140–L154)
-- **Table**: `search_logs`
-- **Inherits**: `db.Model`
-- **Description**: Audit search logging table tracking executed queries, matched category, yield count, and timestamp.
-
-| Attribute / Method | Type | Description |
-| :--- | :--- | :--- |
-| `log_id` | `db.Column(db.Integer, primary_key=True)` | Primary key identifier for the search audit record. |
-| `query_text` | `db.Column(db.String(200), nullable=False)` | Search query entered by user or API caller. |
-| `category_id` | `db.Column(db.Integer, db.ForeignKey('categories.category_id'), nullable=True)` | Optional foreign key reference to target category. |
-| `results_count` | `db.Column(db.Integer, default=0)` | Number of matching products returned. |
-| `searched_at` | `db.Column(db.DateTime, default=datetime.utcnow)` | UTC timestamp of query execution. |
-| `category` | `db.relationship('Category', backref='search_logs')` | Direct reference to target category entity. |
-| `__repr__()` | Method (`-> str`) | Returns `<SearchLog query='{query_text}' results={results_count}>`. |
-
----
-
-## 5. UI Templates & Presentation Components
-
-| File | Template Type | Engine | Key Blocks / Elements |
-| :--- | :--- | :--- | :--- |
-| `app/templates/base.html` | Layout Shell | Engine 3 | `safe_url` macro, `[R//E]` brand mark, dynamic nav links, `user-identity` badge, flash alerts block, `{% block content %}`, semantic footer with live system indicator. |
-| `app/templates/index.html` | Content View | Engine 3 | Extended from `base.html`, hero banner, 4 quantitative telemetry cards, 4 Core Engine breakdown cards, algorithm math terminal box, quick access cards. |
-| `app/static/css/style.css` | Stylesheet | Engine 3 | Technical Minimalist variables, Space Grotesk, General Sans, JetBrains Mono font integrations, alert cards, badges, buttons, responsive grid utilities. |
