@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}PLATFORM ADMIN // TENANT MANAGEMENT — Product Catalogue Ranked Search{% endblock %}
+
+{% block content %}
+<!-- Superadmin Banner -->
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-4">
+    <div>
+        <div class="meta-tag font-mono text-xs mb-1">// PLATFORM SUPERADMIN CONSOLE</div>
+        <h1 class="m-0" style="font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -0.04em;">TENANT MANAGEMENT</h1>
+        <p class="text-muted font-mono text-xs m-0 mt-1">
+            ROOT OPERATOR: <strong>{{ current_user.username }}</strong> &bull; MULTI-TENANT ARCHITECTURE ACTIVE
+        </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap font-mono">
+        <a href="{{ url_for('admin.new_company') }}" class="btn btn-primary btn-sm">+ PROVISION NEW COMPANY</a>
+    </div>
+</div>
+
+<!-- Global Platform KPI Metrics -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[01]</span>
+            <span class="badge badge-neutral text-xs font-mono">TENANTS</span>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ "%02d"|format(total_companies) if total_companies < 100 else total_companies }}</span>
+            <span class="kpi-label">REGISTERED COMPANIES</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[02]</span>
+            <span class="badge badge-neutral text-xs font-mono">DOMAINS</span>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ "%02d"|format(total_categories) if total_categories < 100 else total_categories }}</span>
+            <span class="kpi-label">TOTAL CATEGORIES</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[03]</span>
+            <span class="badge badge-neutral text-xs font-mono">CATALOG</span>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ "%02d"|format(total_products) if total_products < 100 else total_products }}</span>
+            <span class="kpi-label">INDEXED PRODUCTS</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[04]</span>
+            <span class="badge badge-neutral text-xs font-mono">SPONSOR</span>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ "%02d"|format(total_sponsors) if total_sponsors < 100 else total_sponsors }}</span>
+            <span class="kpi-label">ACTIVE PLACEMENTS</span>
+        </div>
+    </div>
+</div>
+
+<!-- Companies Directory & Inspection Matrix -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <div class="meta-tag font-mono text-xs">// TENANT DIRECTORY</div>
+            <h2 class="m-0" style="font-size: 1.35rem; letter-spacing: -0.03em;">Provisioned Tenant Companies</h2>
+        </div>
+        <a href="{{ url_for('admin.new_company') }}" class="btn btn-xs btn-primary font-mono">+ ADD COMPANY</a>
+    </div>
+
+    {% if companies %}
+    <div class="table-responsive">
+        <table class="table w-100">
+            <thead>
+                <tr>
+                    <th class="font-mono text-xs">TENANT ID</th>
+                    <th>COMPANY NAME</th>
+                    <th>MANAGER USERS</th>
+                    <th class="text-center font-mono text-xs">CATEGORIES</th>
+                    <th class="text-center font-mono text-xs">PRODUCTS</th>
+                    <th class="text-end font-mono text-xs">ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in companies %}
+                {% set comp = item.company %}
+                <tr>
+                    <td class="font-mono text-xs text-muted">
+                        [TENANT_{{ comp.company_id }}]
+                    </td>
+                    <td>
+                        <strong>{{ comp.name }}</strong>
+                        <div class="font-mono text-xs text-muted">
+                            Created: {{ comp.created_at.strftime('%Y-%m-%d') if comp.created_at else 'N/A' }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if item.users %}
+                            {% for u in item.users %}
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-1 p-1 bg-paper-dark border-hairline">
+                                <span class="badge badge-neutral font-mono text-xs">{{ u.username }} ({{ u.email }})</span>
+                                <a href="{{ url_for('admin.reset_user_password', company_id=comp.company_id, user_id=u.id) }}"
+                                   class="btn btn-xs btn-outline font-mono text-xs" style="padding: 1px 6px;"
+                                   title="Reset password for {{ u.username }}">
+                                    [RESET PWD]
+                                </a>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted font-mono text-xs">No users assigned</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-neutral font-mono">{{ item.category_count }} DOMAINS</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-neutral font-mono">{{ item.product_count }} ITEMS</span>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex gap-1 justify-content-end font-mono">
+                            <a href="{{ url_for('admin.inspect_company', company_id=comp.company_id) }}" 
+                               class="btn btn-xs btn-primary" title="Inspect this company's categories, products, and weights">
+                                [INSPECT DATA &rarr;]
+                            </a>
+                            <a href="{{ url_for('admin.edit_company', company_id=comp.company_id) }}" 
+                               class="btn btn-xs btn-outline">
+                                [EDIT]
+                            </a>
+                            <form action="{{ url_for('admin.delete_company', company_id=comp.company_id) }}" 
+                                  method="POST" class="d-inline"
+                                  onsubmit="return confirm('Are you sure you want to permanently delete company \'{{ comp.name }}\' and all its categories, products, attributes, and user accounts?');">
+                                <button type="submit" class="btn btn-xs btn-danger">
+                                    [DELETE]
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 font-mono text-xs text-muted">
+        <p>NO TENANT COMPANIES PROVISIONED.</p>
+        <a href="{{ url_for('admin.new_company') }}" class="btn btn-primary btn-sm mt-2">+ PROVISION FIRST COMPANY</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
