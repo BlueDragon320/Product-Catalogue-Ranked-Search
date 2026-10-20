@@ -13,3 +13,4 @@ instance/
 .coverage
 htmlcov/
 .DS_Store
+knowledgebase.md
