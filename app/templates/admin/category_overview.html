@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}{{ category.name }} — Overview{% endblock %}
+
+{% block content %}
+{% set active_tab = 'overview' %}
+{% include "admin/category_header.html" %}
+
+<!-- KPI Metric Cards for this Category -->
+<div class="kpi-grid mb-3">
+    <div class="kpi-card">
+        <div class="kpi-icon">📦</div>
+        <div class="kpi-info">
+            <span class="kpi-val">{{ stats.product_count }}</span>
+            <span class="kpi-label">Total Products</span>
+        </div>
+        <div class="kpi-action">
+            <a href="{{ url_for('admin.new_product', category_id=category.category_id) }}" class="btn btn-sm btn-outline">+ Add Product</a>
+        </div>
+    </div>
+
+    <div class="kpi-card {{ 'kpi-success' if stats.is_weight_valid else 'kpi-warning' }}">
+        <div class="kpi-icon">⚖️</div>
+        <div class="kpi-info">
+            <span class="kpi-val">{{ stats.total_weight }}%</span>
+            <span class="kpi-label">Weight Health: {{ 'Valid (100%)' if stats.is_weight_valid else ('Needs ' ~ (100.0 - stats.total_weight)|round(1) ~ '%') }}</span>
+        </div>
+        <div class="kpi-action">
+            <a href="{{ url_for('admin.list_attributes', category_id=category.category_id) }}" class="btn btn-sm btn-outline">Weights</a>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-icon">⭐</div>
+        <div class="kpi-info">
+            <span class="kpi-val">{{ stats.active_sponsor_count }}</span>
+            <span class="kpi-label">Active Sponsors</span>
+        </div>
+        <div class="kpi-action">
+            <a href="{{ url_for('admin.new_sponsor', category_id=category.category_id) }}" class="btn btn-sm btn-outline">+ Add Sponsor</a>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-icon">📈</div>
+        <div class="kpi-info">
+            <span class="kpi-val">{{ stats.avg_score }}%</span>
+            <span class="kpi-label">Average Score</span>
+        </div>
+        <div class="kpi-action">
+            <a href="{{ url_for('admin.list_products', category_id=category.category_id) }}" class="btn btn-sm btn-outline">View All</a>
+        </div>
+    </div>
+</div>
+
+<!-- 2-Column Overview Grid -->
+<div class="dashboard-split-grid">
+    <!-- Left Column: Top Ranked Products -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center mb-2">
+            <h3 class="m-0">🏆 Top Ranked Products</h3>
+            <a href="{{ url_for('admin.list_products', category_id=category.category_id) }}" class="btn btn-sm btn-outline">All Products ({{ stats.product_count }}) →</a>
+        </div>
+
+        {% if top_products %}
+        <table class="table table-clean">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Product</th>
+                    <th>Score</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in top_products %}
+                <tr>
+                    <td>
+                        <span class="rank-pill rank-{{ loop.index }}">{{ loop.index }}</span>
+                    </td>
+                    <td>
+                        <strong>{{ p.name }}</strong>
+                    </td>
+                    <td>
+                        <span class="score-pill">{{ format_score(p.composite_score) }}</span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin.edit_product', product_id=p.product_id) }}" class="btn btn-xs btn-outline">Edit</a>
+                        <a href="{{ url_for('insights.index', q=p.name) }}" target="_blank" class="btn btn-xs btn-outline font-mono">[INSIGHTS]</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state text-center py-3">
+            <p class="text-muted">No products created in this category yet.</p>
+            <a href="{{ url_for('admin.new_product', category_id=category.category_id) }}" class="btn btn-primary btn-sm">+ Add First Product</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Column: Attributes & Weights Summary -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center mb-2">
+            <h3 class="m-0">⚖️ Criteria & Weights</h3>
+            <a href="{{ url_for('admin.list_attributes', category_id=category.category_id) }}" class="btn btn-sm btn-outline">Manage Attributes →</a>
+        </div>
+
+        <!-- Weight Health Meter -->
+        <div class="weight-meter-widget mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="font-bold text-sm">Weight Sum: {{ stats.total_weight }}% / 100%</span>
+                <span class="badge {{ 'badge-success' if stats.is_weight_valid else 'badge-warning' }}">
+                    {{ 'Ready for Ranking ✓' if stats.is_weight_valid else 'Needs Adjustment' }}
+                </span>
+            </div>
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill {{ 'bg-success' if stats.is_weight_valid else ('bg-danger' if stats.total_weight > 100 else 'bg-warning') }}"
+                     style="width: {{ [stats.total_weight, 100]|min }}%;"></div>
+            </div>
+            {% if not stats.is_weight_valid %}
+                <small class="text-danger d-block mt-1">
+                    {% if stats.total_weight < 100 %}
+                        Missing {{ (100.0 - stats.total_weight)|round(2) }}% weight. Weights must total exactly 100%.
+                    {% else %}
+                        Exceeds 100% by {{ (stats.total_weight - 100.0)|round(2) }}%.
+                    {% endif %}
+                </small>
+            {% endif %}
+        </div>
+
+        {% if attributes %}
+        <table class="table table-clean">
+            <thead>
+                <tr>
+                    <th>Attribute</th>
+                    <th>Range</th>
+                    <th>Weight</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attr in attributes %}
+                <tr class="{{ 'opacity-50' if not attr.is_active else '' }}">
+                    <td>
+                        <strong>{{ attr.name }}</strong>
+                        {% if attr.lower_is_better %}
+                            <span class="badge badge-xs badge-info" title="Lower numerical value gets higher score">Lower is Better</span>
+                        {% endif %}
+                        {% if not attr.is_active %}
+                            <span class="badge badge-xs badge-secondary">Deactivated</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if attr.data_type == 'binary' %}
+                            <span class="range-pill font-mono">Yes / No</span>
+                        {% else %}
+                            {{ attr.min_value }} &ndash; {{ attr.max_value }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong class="text-primary">{{ attr.weight }}%</strong>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state text-center py-3">
+            <p class="text-muted">No attributes configured yet.</p>
+            <a href="{{ url_for('admin.new_attribute', category_id=category.category_id) }}" class="btn btn-primary btn-sm">+ Add First Attribute</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

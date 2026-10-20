@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Manage Categories — Admin{% endblock %}
+
+{% block content %}
+<nav class="hub-breadcrumb mb-2" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Categories</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h1 class="m-0" style="font-size: 1.5rem;">Product Categories</h1>
+        <p class="text-muted m-0">Organize your ranking engine into isolated product categories with customized ranking weights.</p>
+    </div>
+    <a href="{{ url_for('admin.new_category') }}" class="btn btn-primary btn-sm">+ Create New Category</a>
+</div>
+
+<div class="card mb-4">
+    <div class="table-responsive">
+        <table class="table table-clean">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">ID</th>
+                    <th>Category Name</th>
+                    <th>Weight Health</th>
+                    <th>Inventory & Sponsors</th>
+                    <th style="width: 280px;">Management</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if category_cards %}
+                    {% for item in category_cards %}
+                    {% set category = item.category %}
+                    {% set st = item.stats %}
+                    <tr>
+                        <td class="text-muted">#{{ category.category_id }}</td>
+                        <td>
+                            <strong style="font-size: 1.05rem;">
+                                <a href="{{ url_for('admin.category_overview', category_id=category.category_id) }}">{{ category.name }}</a>
+                            </strong>
+                            <div class="text-muted text-xs">Created: {{ category.created_at.strftime('%b %d, %Y') if category.created_at else '—' }}</div>
+                        </td>
+                        <td>
+                            <span class="badge {{ 'badge-success' if st.is_weight_valid else 'badge-warning' }}">
+                                {{ st.total_weight }}% {{ '✓ Optimal' if st.is_weight_valid else ('(Needs ' ~ st.weight_diff ~ '%)') }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                <span class="badge badge-neutral text-xs">📦 {{ st.product_count }} Products</span>
+                                <span class="badge badge-neutral text-xs">⚖️ {{ st.active_attribute_count }} Criteria</span>
+                                {% if st.active_sponsor_count > 0 %}
+                                <span class="badge badge-warning text-xs">⭐ {{ st.active_sponsor_count }} Sponsored</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-btn-group">
+                                <a href="{{ url_for('admin.category_overview', category_id=category.category_id) }}" class="btn btn-xs btn-primary font-bold">
+                                    📊 Manage Hub &rarr;
+                                </a>
+                                <a href="{{ url_for('admin.edit_category', category_id=category.category_id) }}" class="btn btn-xs btn-outline">
+                                    Edit
+                                </a>
+                                <form action="{{ url_for('admin.delete_category', category_id=category.category_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete category {{ category.name }}?');">
+                                    {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                                    <button type="submit" class="btn btn-xs btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">
+                        No categories found. Click <strong>+ Create New Category</strong> to get started.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

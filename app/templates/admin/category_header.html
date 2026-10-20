@@ -1,0 +1,89 @@
+{# 
+  category_header.html — Technical Minimalist Category Hub Navigation
+#}
+
+{% if session.get('inspect_company_id') %}
+<div class="alert alert-warning d-flex justify-content-between align-items-center mb-2 font-mono text-xs">
+    <span>[SUPERADMIN INSPECTION ACTIVE &bull; TENANT: {{ category.company.name if category.company else 'N/A' }}]</span>
+    <a href="{{ url_for('admin.exit_inspect') }}" class="btn btn-xs btn-outline">[EXIT INSPECTION ×]</a>
+</div>
+{% endif %}
+
+<nav class="hub-breadcrumb mb-2" aria-label="breadcrumb">
+    <ol class="breadcrumb font-mono">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">CONSOLE</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.list_categories') }}">CATEGORIES</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ category.name }}</li>
+        {% if active_tab == 'attributes' %}
+            <li class="breadcrumb-item active">ATTRIBUTES</li>
+        {% elif active_tab == 'products' %}
+            <li class="breadcrumb-item active">PRODUCTS</li>
+        {% elif active_tab == 'sponsors' %}
+            <li class="breadcrumb-item active">SPONSORS</li>
+        {% elif active_tab == 'settings' %}
+            <li class="breadcrumb-item active">SETTINGS</li>
+        {% endif %}
+    </ol>
+</nav>
+
+<div class="category-hub-card card mb-3">
+    <div class="hub-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="hub-category-icon font-mono">[CAT_{{ category.category_id }}]</span>
+                <h1 class="hub-title m-0">{{ category.name }}</h1>
+            </div>
+            <p class="hub-subtitle text-muted m-0 mt-1">SYS.TENANT_ISOLATION: ACTIVE &bull; DOMAIN_ID: #{{ category.category_id }}</p>
+        </div>
+        
+        <div class="d-flex align-items-center gap-2 flex-wrap font-mono text-xs">
+            {% if stats %}
+                <span class="badge badge-neutral">
+                    [PRODUCTS: {{ stats.product_count }}]
+                </span>
+                <span class="badge {{ 'badge-success' if stats.is_weight_valid else 'badge-warning' }}">
+                    [WEIGHTS: {{ stats.total_weight }}% {{ 'OK' if stats.is_weight_valid else 'CALIB_REQ' }}]
+                </span>
+                <span class="badge badge-neutral">
+                    [SPONSORS: {{ stats.active_sponsor_count }}]
+                </span>
+            {% endif %}
+            <a href="{{ url_for('insights.index', category_id=category.category_id) }}" target="_blank" class="btn btn-xs btn-outline font-mono" title="Open category insights">
+                INSIGHTS ↗
+            </a>
+        </div>
+    </div>
+
+    <!-- Category Hub Sub-Navigation Tabs -->
+    <div class="hub-nav-tabs font-mono text-xs">
+        <a href="{{ url_for('admin.category_overview', category_id=category.category_id) }}" 
+           class="hub-tab {{ 'active' if active_tab == 'overview' else '' }}">
+            [OVERVIEW]
+        </a>
+        <a href="{{ url_for('admin.list_attributes', category_id=category.category_id) }}" 
+           class="hub-tab {{ 'active' if active_tab == 'attributes' else '' }}">
+            [ATTRIBUTES &amp; WEIGHTS]
+            {% if stats and not stats.is_weight_valid %}
+                <span class="tab-alert-dot" title="Weights do not sum to 100%">!</span>
+            {% endif %}
+        </a>
+        <a href="{{ url_for('admin.list_products', category_id=category.category_id) }}" 
+           class="hub-tab {{ 'active' if active_tab == 'products' else '' }}">
+            [PRODUCTS]
+            {% if stats %}
+                <span class="tab-count">{{ stats.product_count }}</span>
+            {% endif %}
+        </a>
+        <a href="{{ url_for('admin.list_sponsors', category_id=category.category_id) }}" 
+           class="hub-tab {{ 'active' if active_tab == 'sponsors' else '' }}">
+            [SPONSORED_SLOTS]
+            {% if stats and stats.active_sponsor_count > 0 %}
+                <span class="tab-count">{{ stats.active_sponsor_count }}</span>
+            {% endif %}
+        </a>
+        <a href="{{ url_for('admin.edit_category', category_id=category.category_id) }}" 
+           class="hub-tab {{ 'active' if active_tab == 'settings' else '' }}">
+            [SETTINGS]
+        </a>
+    </div>
+</div>
