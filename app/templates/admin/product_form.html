@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Product' if product else 'Add Product' }} — {{ category.name }}{% endblock %}
+
+{% block content %}
+<nav class="hub-breadcrumb mb-2" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.list_categories') }}">Categories</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.list_products', category_id=category.category_id) }}">{{ category.name }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ 'Edit Product' if product else 'Add Product' }}</li>
+    </ol>
+</nav>
+
+<div class="form-container-wide">
+    <div class="card mb-4">
+        <div class="card-header border-bottom pb-2 mb-3">
+            <h2 class="m-0" style="font-size: 1.35rem;">
+                {{ '✏️ Edit Product: ' ~ product.name if product else '📦 Add New Product to ' ~ category.name }}
+            </h2>
+            <p class="text-muted text-sm m-0">Provide product identification and numeric attribute measurements for weighted ranking.</p>
+        </div>
+
+        <form method="POST" action="">
+            {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+
+            <!-- Product Identity -->
+            <div class="form-section mb-4">
+                <h3 class="form-section-title font-bold text-sm text-muted text-uppercase mb-2">1. Product Identity</h3>
+                <div class="form-group mb-3">
+                    <label for="product_name" class="font-bold">Product Name <span class="text-danger">*</span></label>
+                    <input type="text" name="product_name" id="product_name" class="form-control" 
+                           placeholder="e.g. Sony WF-1000XM5" 
+                           value="{{ product.name if product else '' }}" required autofocus>
+                    <small class="text-muted">The commercial name of the item displayed on search rankings.</small>
+                </div>
+            </div>
+
+            <!-- Dynamic Attribute Inputs -->
+            <div class="form-section mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h3 class="form-section-title font-bold text-sm text-muted text-uppercase m-0">2. Ranking Attribute Measurements</h3>
+                    <span class="badge badge-neutral text-xs">{{ attributes|length }} active criteria</span>
+                </div>
+
+                {% if attributes %}
+                <div class="attributes-form-grid">
+                    {% for attr in attributes %}
+                    <div class="attribute-input-card card p-3 mb-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="attr_{{ attr.attribute_id }}" class="font-bold m-0" style="font-size: 0.95rem;">
+                                {{ attr.name }}
+                            </label>
+                            <div class="d-flex gap-1">
+                                {% if attr.data_type == 'binary' %}
+                                    <span class="badge badge-warning text-xs font-mono">Binary (Yes/No)</span>
+                                {% else %}
+                                    <span class="badge badge-neutral text-xs font-mono">Range: {{ attr.min_value }} &ndash; {{ attr.max_value }}</span>
+                                {% endif %}
+                                <span class="badge badge-neutral text-xs font-mono">Weight: {{ attr.weight }}%</span>
+                                {% if attr.lower_is_better %}
+                                    <span class="badge badge-info text-xs font-mono">↓ Lower is better</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if attr.data_type == 'binary' %}
+                        {% set curr_val = existing_values.get(attr.attribute_id) if existing_values else None %}
+                        <div class="input-with-hint p-2 bg-paper border-hairline font-mono text-sm d-flex gap-4 align-items-center">
+                            <label class="d-flex align-items-center gap-2 m-0 cursor-pointer">
+                                <input type="radio" name="attr_{{ attr.attribute_id }}" id="attr_{{ attr.attribute_id }}_yes" 
+                                       value="1" {{ 'checked' if curr_val == 1.0 or curr_val is none else '' }} required>
+                                <span class="badge badge-success" style="padding: 0.35rem 0.65rem;">YES (1)</span>
+                            </label>
+                            <label class="d-flex align-items-center gap-2 m-0 cursor-pointer">
+                                <input type="radio" name="attr_{{ attr.attribute_id }}" id="attr_{{ attr.attribute_id }}_no" 
+                                       value="0" {{ 'checked' if curr_val == 0.0 else '' }} required>
+                                <span class="badge badge-neutral" style="padding: 0.35rem 0.65rem;">NO (0)</span>
+                            </label>
+                            <small class="text-muted font-mono text-xs">// Select binary evaluation for scoring</small>
+                        </div>
+                        {% elif attr.name.strip().lower() == 'rating' %}
+                        <div class="input-with-hint">
+                            <input type="number" step="0.01" name="attr_{{ attr.attribute_id }}" 
+                                   id="attr_{{ attr.attribute_id }}" class="form-control font-bold"
+                                   min="{{ attr.min_value }}" max="{{ [attr.max_value, 100.0]|max }}"
+                                   placeholder="Enter rating (0-5 or 0-100, default: 4.0)"
+                                   value="{{ existing_values.get(attr.attribute_id, '') if existing_values else '' }}">
+                            <small class="text-muted font-mono text-xs">// Scale 0–5 or 0–100 accepted. Defaults to 4.0 if empty.</small>
+                        </div>
+                        {% elif 'price' in attr.name.strip().lower() %}
+                        <div class="input-with-hint">
+                            <input type="number" step="0.01" name="attr_{{ attr.attribute_id }}" 
+                                   id="attr_{{ attr.attribute_id }}" class="form-control font-bold"
+                                   min="{{ attr.min_value }}" max="{{ attr.max_value }}"
+                                   placeholder="Enter price between {{ attr.min_value }} and {{ attr.max_value }} (default: 1999.0)"
+                                   value="{{ existing_values.get(attr.attribute_id, '') if existing_values else '' }}">
+                            <small class="text-muted font-mono text-xs">// Defaults to 1999.0 if empty.</small>
+                        </div>
+                        {% else %}
+                        <div class="input-with-hint">
+                            <input type="number" step="0.01" name="attr_{{ attr.attribute_id }}" 
+                                   id="attr_{{ attr.attribute_id }}" class="form-control font-bold"
+                                   min="{{ attr.min_value }}" max="{{ attr.max_value }}"
+                                   placeholder="Enter value between {{ attr.min_value }} and {{ attr.max_value }}"
+                                   value="{{ existing_values.get(attr.attribute_id, '') if existing_values else '' }}"
+                                   required>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    ⚠️ No active ranking attributes configured for <strong>{{ category.name }}</strong> yet. Please define attributes and weights in the Category Hub before adding products.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                <a href="{{ url_for('admin.list_products', category_id=category.category_id) }}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary font-bold">
+                    {{ '💾 Save Product Changes' if product else '➕ Create & Calculate Score' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
