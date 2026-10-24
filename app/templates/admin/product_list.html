@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ category.name }} — Products{% endblock %}
+
+{% block content %}
+{% set active_tab = 'products' %}
+{% include "admin/category_header.html" %}
+
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h2 class="m-0" style="font-size: 1.25rem;">📦 Category Products & Composite Ranking</h2>
+            <p class="text-muted text-sm m-0">Products are automatically scored and ranked using the weighted normalization algorithm (FR-10, FR-12).</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('insights.index', category_id=category.category_id) }}" target="_blank" class="btn btn-outline btn-sm font-mono">[CATEGORY INSIGHTS ↗]</a>
+            <a href="{{ url_for('admin.new_product', category_id=category.category_id) }}" class="btn btn-primary btn-sm">+ Add Product</a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-clean">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">Rank</th>
+                    <th>Product Name</th>
+                    <th>Composite Score</th>
+                    <th>Attribute Values</th>
+                    <th>Last Updated</th>
+                    <th style="width: 140px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        <span class="rank-pill rank-{{ loop.index }}">{{ loop.index }}</span>
+                    </td>
+                    <td>
+                        <strong>{{ product.name }}</strong>
+                        <div class="text-muted text-xs">ID: #{{ product.product_id }}</div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="score-display-sm font-bold text-primary">
+                                {% if product.composite_score is not none %}
+                                    {{ "%.2f"|format(product.composite_score * 100) }}%
+                                {% else %}
+                                    0.00%
+                                {% endif %}
+                            </span>
+                            <div class="progress-bar-track-sm" style="width: 70px;">
+                                <div class="progress-bar-fill bg-primary" style="width: {{ (product.composite_score * 100)|round(1) if product.composite_score else 0 }}%;"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% if product.product_id in product_attrs %}
+                                {% for attr in attributes %}
+                                    {% if attr.attribute_id in product_attrs[product.product_id] %}
+                                    <span class="badge badge-neutral text-xs">
+                                        {{ attr.name }}: 
+                                        {% if attr.data_type == 'binary' %}
+                                            <strong class="{{ 'text-success' if product_attrs[product.product_id][attr.attribute_id] == 1.0 else 'text-muted' }}">{{ 'YES' if product_attrs[product.product_id][attr.attribute_id] == 1.0 else 'NO' }}</strong>
+                                        {% else %}
+                                            <strong>{{ product_attrs[product.product_id][attr.attribute_id] }}</strong>
+                                        {% endif %}
+                                    </span>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted text-xs">No values</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="text-xs text-muted">
+                        {{ product.updated_at.strftime('%b %d, %Y') if product.updated_at else (product.created_at.strftime('%b %d, %Y') if product.created_at else '—') }}
+                    </td>
+                    <td>
+                        <div class="action-btn-group">
+                            <a href="{{ url_for('admin.edit_product', product_id=product.product_id) }}" class="btn btn-xs btn-outline">Edit</a>
+                            <a href="{{ url_for('insights.index', q=product.name) }}" target="_blank" class="btn btn-xs btn-outline font-mono" title="Inspect product in insights">[INSIGHTS]</a>
+                            <form action="{{ url_for('admin.delete_product', product_id=product.product_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete {{ product.name }}? This cannot be undone.');">
+                                {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                                <button type="submit" class="btn btn-xs btn-outline-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">
+                        No products added to this category yet. Click <strong>+ Add Product</strong> to add one.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
