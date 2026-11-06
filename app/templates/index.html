@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard // Product Catalogue Ranked Search & Sponsored Placement Engine{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero-header-badge">
+    <span class="status-dot"></span>
+    <span>THEME 2 // SEARCH &amp; RANKING SYSTEM ARCHITECTURE</span>
+  </div>
+
+  <h1 class="hero-title">
+    Product Catalogue <span class="text-gradient">Ranked Search</span> &amp; Sponsored Placement Engine
+  </h1>
+
+  <p class="hero-subtitle">
+    A multi-tenant, high-precision ranking microservice and catalog intelligence engine.
+    Evaluates items across user-weighted multi-criteria dimensions, normalizes continuous numeric and
+    discrete binary metrics, enforces mathematical 100% weight allocation rules, and interleaves
+    date-capped sponsored placements under anti-bias policies.
+  </p>
+
+  <div class="hero-actions">
+    <a href="{{ safe_url('insights.index', '/insights') }}" class="btn btn-primary">
+      <span>▶</span> Explore Insights
+    </a>
+    <a href="{{ safe_url('admin.index', '/admin') }}" class="btn btn-secondary">
+      <span>⚙</span> Admin Console
+    </a>
+    <a href="#engine-architecture" class="btn btn-outline">
+      System Architecture ↓
+    </a>
+  </div>
+</section>
+
+<!-- System Telemetry & Quantitative Standards Strip -->
+<section class="metric-strip" aria-label="System Metrics">
+  <div class="metric-card">
+    <span class="metric-label">WEIGHT ALLOCATION</span>
+    <span class="metric-value">100.0%</span>
+    <span class="metric-caption">Strictly validated mathematical sum</span>
+  </div>
+  <div class="metric-card">
+    <span class="metric-label">SPONSORED RATIO</span>
+    <span class="metric-value">1 : 5</span>
+    <span class="metric-caption">Fixed interleaving slots (1, 6, 11)</span>
+  </div>
+  <div class="metric-card">
+    <span class="metric-label">NORMALIZATION</span>
+    <span class="metric-value">[0.0, 1.0]</span>
+    <span class="metric-caption">Directional Min-Max scaling</span>
+  </div>
+  <div class="metric-card">
+    <span class="metric-label">RESPONSE SLA</span>
+    <span class="metric-value">&lt; 300ms</span>
+    <span class="metric-caption">Target microservice query latency</span>
+  </div>
+</section>
+
+<!-- Engine Architecture Overview -->
+<section id="engine-architecture" style="margin-top: 3rem;">
+  <div class="section-header">
+    <div class="section-label">// SYSTEM DECOMPOSITION</div>
+    <h2 class="section-title">The Four Core Engines</h2>
+    <p style="margin-top: 0.5rem; max-width: 650px;">
+      Modular four-layer microservice architecture ensuring database integrity, algorithmic precision,
+      technical minimalist UI interaction, and strict test verification.
+    </p>
+  </div>
+
+  <div class="grid-4" style="margin-top: 2rem;">
+    <!-- Engine 1: Data & Integrity -->
+    <div class="card">
+      <div class="card-top">
+        <span class="card-engine-id">ENGINE_01</span>
+        <span class="card-badge">DATA &amp; INTEGRITY</span>
+      </div>
+      <h3 class="card-title">Multi-Tenant Schema &amp; Storage</h3>
+      <p class="card-desc">
+        Relational SQLite &amp; PostgreSQL persistence layer structured via SQLAlchemy ORM. Enforces
+        company tenant isolation, relational constraints, unique product-attribute indexes, and audit logs.
+      </p>
+      <ul class="card-spec-list">
+        <li class="card-spec-item">Company &amp; User (RBAC Isolation)</li>
+        <li class="card-spec-item">Category &amp; Attribute Definitions</li>
+        <li class="card-spec-item">Product &amp; ProductAttrValue Mapping</li>
+        <li class="card-spec-item">SponsoredPlacement &amp; SearchLog</li>
+      </ul>
+    </div>
+
+    <!-- Engine 2: Core Logic & Algorithm -->
+    <div class="card">
+      <div class="card-top">
+        <span class="card-engine-id">ENGINE_02</span>
+        <span class="card-badge">CORE LOGIC</span>
+      </div>
+      <h3 class="card-title">Ranking &amp; Interleaving Kernel</h3>
+      <p class="card-desc">
+        Computes composite ranking via Min-Max normalization with directional polarity.
+        Executes 3-tier deterministic tie-breaking and interleaves sponsored placements without organic score corruption.
+      </p>
+      <ul class="card-spec-list">
+        <li class="card-spec-item">Directional Min-Max Normalization</li>
+        <li class="card-spec-item">User-Weighted Composite Scoring</li>
+        <li class="card-spec-item">3-Tier Deterministic Tie-Breaking</li>
+        <li class="card-spec-item">1:5 Anti-Bias Interleaving Policy</li>
+      </ul>
+    </div>
+
+    <!-- Engine 3: Interface & Access -->
+    <div class="card">
+      <div class="card-top">
+        <span class="card-engine-id">ENGINE_03</span>
+        <span class="card-badge">INTERFACE &amp; WEB</span>
+      </div>
+      <h3 class="card-title">Technical Minimalist UI &amp; REST</h3>
+      <p class="card-desc">
+        Jinja2 presentation system styled with crisp borders, monospace metrics, and real-time validation bars.
+        Includes external B2B REST microservice endpoints for catalog integration.
+      </p>
+      <ul class="card-spec-list">
+        <li class="card-spec-item">Space Grotesk + JetBrains Mono System</li>
+        <li class="card-spec-item">Live Weight Validation Feedback</li>
+        <li class="card-spec-item">REST API: /api/v1/search</li>
+        <li class="card-spec-item">Search Telemetry &amp; Insights Dashboard</li>
+      </ul>
+    </div>
+
+    <!-- Engine 4: Validation & Testing -->
+    <div class="card">
+      <div class="card-top">
+        <span class="card-engine-id">ENGINE_04</span>
+        <span class="card-badge">VALIDATION &amp; TEST</span>
+      </div>
+      <h3 class="card-title">Verification &amp; Quality Guard</h3>
+      <p class="card-desc">
+        Rigorous mathematical verification enforcing exactly 100.0% weight sum rules.
+        Automated Pytest suite testing zero-variance datasets, authorization boundaries, and search yield reporting.
+      </p>
+      <ul class="card-spec-list">
+        <li class="card-spec-item">Strict 100.0% Weight Sum Invariant</li>
+        <li class="card-spec-item">Zero-Variance DivZero Protection</li>
+        <li class="card-spec-item">Pytest &amp; pytest-flask Coverage</li>
+        <li class="card-spec-item">Audit Search Yield Telemetry</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Mathematical Formulation Terminal Box -->
+<section class="tech-spec-box" aria-label="Ranking Algorithm Formulation">
+  <div class="tech-spec-header">
+    <div class="tech-spec-title">
+      <span class="mono">[KERNEL_MATH]</span>
+      <span>Composite Scoring &amp; Normalization Logic</span>
+    </div>
+    <div class="tech-spec-dots">
+      <span class="tech-spec-dot"></span>
+      <span class="tech-spec-dot"></span>
+      <span class="tech-spec-dot"></span>
+    </div>
+  </div>
+  <div class="tech-spec-body">
+    <pre class="code-block"><code><span class="code-comment"># 1. Directional Min-Max Normalization over Category Attribute Values:</span>
+<span class="code-keyword">if</span> higher_is_better:
+    norm_val = (val - min_val) / (max_val - min_val) <span class="code-keyword">if</span> max_val != min_val <span class="code-keyword">else</span> <span class="code-num">1.0</span>
+<span class="code-keyword">else</span>: <span class="code-comment"># lower_is_better (e.g. Price, Latency, Weight)</span>
+    norm_val = (max_val - val) / (max_val - min_val) <span class="code-keyword">if</span> max_val != min_val <span class="code-keyword">else</span> <span class="code-num">1.0</span>
+
+<span class="code-comment"># 2. Multi-Criteria Composite Score (Strict invariant: sum(w_i) == 100.0%):</span>
+composite_score = <span class="code-fn">sum</span>( (weight_i / <span class="code-num">100.0</span>) * norm_val_i <span class="code-keyword">for</span> i <span class="code-keyword">in</span> active_attributes )
+
+<span class="code-comment"># 3. 3-Tier Deterministic Tie-Breaking Order:</span>
+ORDER BY composite_score <span class="code-keyword">DESC</span>, created_at <span class="code-keyword">DESC</span>, product_id <span class="code-keyword">ASC</span>
+
+<span class="code-comment"># 4. Anti-Bias Sponsored Interleaving (Slots 1, 6, 11; max 20% cap):</span>
+interleaved_results = <span class="code-fn">interleave_sponsored</span>(organic_ranked, active_sponsored, interval=<span class="code-num">5</span>)</code></pre>
+  </div>
+</section>
+
+<!-- Quick Action Gateway -->
+<section style="margin-bottom: 2rem;">
+  <div class="section-header">
+    <div class="section-label">// ACCESS GATEWAY</div>
+    <h2 class="section-title">Quick Navigation</h2>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3 class="card-title">Catalog Search &amp; Ranking</h3>
+      <p class="card-desc">
+        Perform live ranked multi-criteria search queries across product categories, inspect normalized attribute
+        breakdowns, and test dynamic customer weight adjustments.
+      </p>
+      <div style="margin-top: 1rem;">
+        <a href="{{ safe_url('main.index', '/') }}" class="btn btn-secondary btn-sm">Catalog Workspace</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Tenant Administration</h3>
+      <p class="card-desc">
+        Define categories, configure continuous numeric or binary attributes, establish weight budgets, and schedule
+        date-bounded sponsored promotion campaigns.
+      </p>
+      <div style="margin-top: 1rem;">
+        <a href="{{ safe_url('admin.index', '/admin') }}" class="btn btn-secondary btn-sm">Launch Admin Console</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{% block title %}Product Catalogue Ranked Search & Sponsored Placement Engine{% endblock %}</title>
+
+  <!-- Typography Links: General Sans, Space Grotesk, JetBrains Mono -->
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Core Technical Minimalist Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <!-- Safe URL Helper Macro for Dynamic Blueprint Resolution -->
+  {% macro safe_url(endpoint, fallback='#') -%}
+    {%- if endpoint in url_for.__globals__['current_app'].view_functions -%}
+      {{ url_for(endpoint) }}
+    {%- else -%}
+      {{ fallback }}
+    {%- endif -%}
+  {%- endmacro %}
+
+  <!-- Top Navigation Bar -->
+  <header class="site-header">
+    <div class="container">
+      <nav class="nav-wrapper" aria-label="Main Navigation">
+        <!-- Brand Identification -->
+        <a href="{{ safe_url('main.index', '/') }}" class="brand-wrapper">
+          <span class="brand-mark">[R//E]</span>
+          <span class="brand-name">RANK_ENGINE</span>
+          <span class="brand-version">v1.0</span>
+        </a>
+
+        <!-- Main Navigation Links -->
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="{{ safe_url('main.index', '/') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">
+              <span>01//</span> Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ safe_url('insights.index', '/insights') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('insights.') %}active{% endif %}">
+              <span>02//</span> Insights
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ safe_url('admin.index', '/admin') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('admin.') %}active{% endif %}">
+              <span>03//</span> Admin
+            </a>
+          </li>
+        </ul>
+
+        <!-- Authentication & Tenant Context Actions -->
+        <div class="nav-actions">
+          {% if current_user.is_authenticated %}
+            <div class="user-identity">
+              <span class="role-tag">
+                {% if current_user.is_superadmin %}
+                  [SUPERADMIN]
+                {% elif current_user.is_admin %}
+                  [ADMIN]
+                {% else %}
+                  [USER]
+                {% endif %}
+              </span>
+              <span>{{ current_user.username }}</span>
+            </div>
+            <a href="{{ safe_url('auth.logout', '/auth/logout') }}" class="btn btn-outline btn-sm">
+              Logout
+            </a>
+          {% else %}
+            <a href="{{ safe_url('auth.login', '/auth/login') }}" class="btn btn-secondary btn-sm">
+              Login
+            </a>
+          {% endif %}
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main class="site-main">
+    <div class="container">
+      <!-- Flash Messages Block -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-container" role="alert" aria-live="polite">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category if category in ['info', 'success', 'warning', 'danger', 'error'] else 'info' }}">
+                <div class="alert-content">
+                  <span class="alert-badge">{{ category }}</span>
+                  <span class="alert-text">{{ message }}</span>
+                </div>
+                <button type="button" class="alert-close" aria-label="Close message" onclick="this.parentElement.remove();">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- Primary Page Content -->
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Semantic Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-meta">
+          <div class="footer-brand">PRODUCT CATALOGUE RANKED SEARCH</div>
+          <div class="footer-subtitle">Engineered Multi-Tenant Ranking Microservice & Precision Catalog Engine</div>
+        </div>
+        <ul class="footer-links">
+          <li><a href="{{ safe_url('main.index', '/') }}" class="footer-link">Home</a></li>
+          <li><a href="{{ safe_url('insights.index', '/insights') }}" class="footer-link">Insights Telemetry</a></li>
+          <li><a href="{{ safe_url('admin.index', '/admin') }}" class="footer-link">Admin Console</a></li>
+          <li><a href="https://github.com" target="_blank" rel="noopener noreferrer" class="footer-link">API Specification</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>SYSTEM_STATE: OPERATIONAL // KERNEL: ACTIVE // NORM_ENGINE: MIN-MAX [0.0 - 1.0] // SPONSORED_RATIO: 1:5</span>
+        </div>
+        <div class="footer-copyright">
+          &copy; 2026 RANK_ENGINE. Architecture Theme 2. Strictly Enforced 100% Weight Calibration.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

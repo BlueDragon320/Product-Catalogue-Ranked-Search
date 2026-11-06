@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}TENANTS // ALL REGISTERED COMPANIES — Product Catalogue Ranked Search{% endblock %}
+
+{% block content %}
+<nav class="hub-breadcrumb mb-2" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Console</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Companies</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <div class="meta-tag font-mono text-xs">// TENANT ORGANIZATIONS</div>
+        <h1 class="m-0" style="font-size: 1.5rem;">Registered Companies</h1>
+        <p class="text-muted font-mono text-xs m-0 mt-1">Tenant accounts configured within the multi-tenant ranking engine.</p>
+    </div>
+    {% if is_superadmin %}
+    <a href="{{ url_for('admin.new_company') }}" class="btn btn-primary btn-sm font-mono">+ Provision New Company</a>
+    {% endif %}
+</div>
+
+<div class="card mb-4">
+    <div class="table-responsive">
+        <table class="table table-clean">
+            <thead>
+                <tr>
+                    <th class="font-mono text-xs" style="width: 80px;">ID</th>
+                    <th>Company Name</th>
+                    <th>Created</th>
+                    <th class="text-end font-mono text-xs" style="width: 220px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in companies %}
+                <tr>
+                    <td class="font-mono text-xs text-muted">#{{ c.company_id }}</td>
+                    <td>
+                        <strong>{{ c.name }}</strong>
+                    </td>
+                    <td class="font-mono text-xs text-muted">
+                        {{ c.created_at.strftime('%Y-%m-%d') if c.created_at else '—' }}
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex gap-1 justify-content-end font-mono">
+                            {% if is_superadmin %}
+                            <a href="{{ url_for('admin.inspect_company', company_id=c.company_id) }}" class="btn btn-xs btn-primary">
+                                [INSPECT]
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('admin.edit_company', company_id=c.company_id) }}" class="btn btn-xs btn-outline">
+                                [EDIT]
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center font-mono text-xs text-muted py-4">No companies found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
