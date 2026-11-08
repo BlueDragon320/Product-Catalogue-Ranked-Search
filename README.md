@@ -108,6 +108,15 @@ Product-Catalogue-Ranked-Search/
 │   ├── test_api.py            # REST API search & ranking contract tests
 │   ├── test_sponsor.py        # Sponsored placement capping & date tests
 │   └── test_edge_cases.py     # Zero weight, empty catalog, and boundary tests
+├── documents/                 # College & Engine Deliverables (Word, Excel, SQL)
+│   ├── DATABASE_QUERIES_ENGINE1.sql # Engine 1: Pure RDBMS DDL, ALTER, DML & audit queries
+│   ├── TEST_CASES_ENGINE4.xlsx      # Engine 4: Master Test Cases Excel matrix (45 scenarios)
+│   ├── FOUR_ENGINES_PROJECT_MANUAL_AND_VIVA_GUIDE.docx # Word project manual & viva prep
+│   └── MASTER_DEVELOPMENT_PHASE_GUIDE.docx             # 6-Week development manual (.docx)
+├── markdown/                  # Developer logs & markdown manuals
+│   ├── DEV_LOGS_VAIBHAV.md    # Daily developer issue & fix resolution log
+│   ├── FOUR_ENGINES_PROJECT_MANUAL_AND_VIVA_GUIDE.md   # 4-Engine manual in Markdown
+│   └── MASTER_DEVELOPMENT_PHASE_GUIDE.md               # Master phase guide in Markdown
 ├── config.py                  # Environment configuration classes
 ├── requirements.txt           # Python package dependencies
 ├── run.py                     # Entry point (Port 5000)
