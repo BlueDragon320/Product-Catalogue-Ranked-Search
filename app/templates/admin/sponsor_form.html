@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — {{ category.name }}{% endblock %}
+
+{% block content %}
+<nav class="hub-breadcrumb mb-2" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.list_categories') }}">Categories</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.list_sponsors', category_id=category.category_id) }}">{{ category.name }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+    </ol>
+</nav>
+
+<div class="form-container">
+    <div class="card mb-4">
+        <div class="card-header border-bottom pb-2 mb-3">
+            <h2 class="m-0" style="font-size: 1.35rem;">⭐ {{ title }}</h2>
+            <p class="text-muted text-sm m-0">Category: <strong>{{ category.name }}</strong> &bull; Schedule a priority placement slot</p>
+        </div>
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group mb-3">
+                <label for="product_id" class="font-bold">Select Product <span class="text-danger">*</span></label>
+                {{ form.product_id(class="form-control font-bold") }}
+                {% if form.product_id.errors %}
+                    <span class="text-danger text-xs">{{ form.product_id.errors[0] }}</span>
+                {% endif %}
+                <small class="text-muted">Choose which product from {{ category.name }} to promote.</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="slot_position" class="font-bold">Target Slot Position <span class="text-danger">*</span></label>
+                {{ form.slot_position(class="form-control font-bold") }}
+                {% if form.slot_position.errors %}
+                    <span class="text-danger text-xs">{{ form.slot_position.errors[0] }}</span>
+                {% endif %}
+                <small class="text-muted">
+                    Rule FR-15 & NFR-5.6: Sponsored products are placed at capped positions (e.g. 1, 6, 11). Enter 1 for top priority.
+                </small>
+            </div>
+
+            <div class="d-flex gap-3 mb-3 flex-wrap">
+                <div class="form-group flex-1 min-w-160">
+                    <label for="start_date" class="font-bold">Campaign Start Date <span class="text-danger">*</span></label>
+                    {{ form.start_date(class="form-control", type="date") }}
+                    {% if form.start_date.errors %}
+                        <span class="text-danger text-xs">{{ form.start_date.errors[0] }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group flex-1 min-w-160">
+                    <label for="end_date" class="font-bold">Campaign End Date <span class="text-danger">*</span></label>
+                    {{ form.end_date(class="form-control", type="date") }}
+                    {% if form.end_date.errors %}
+                        <span class="text-danger text-xs">{{ form.end_date.errors[0] }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-4">
+                <a href="{{ url_for('admin.list_sponsors', category_id=category.category_id) }}" class="btn btn-outline">Cancel</a>
+                {{ form.submit(class="btn btn-primary font-bold") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

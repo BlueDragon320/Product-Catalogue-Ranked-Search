@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}{{ category.name }} — Sponsored Placements{% endblock %}
+
+{% block content %}
+{% set active_tab = 'sponsors' %}
+{% include "admin/category_header.html" %}
+
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+        <div>
+            <h2 class="m-0" style="font-size: 1.25rem;">⭐ Sponsored Product Placements</h2>
+            <p class="text-muted text-sm m-0">Promote select products into top ranked slots with date-based scheduling (FR-14, FR-15, FR-17).</p>
+        </div>
+        <a href="{{ url_for('admin.new_sponsor', category_id=category.category_id) }}" class="btn btn-primary btn-sm">+ New Placement</a>
+    </div>
+
+    <!-- Sponsor Policy Explainer Callout -->
+    <div class="callout callout-info mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <span class="callout-icon">💡</span>
+            <div>
+                <strong>Capped Slot Guarantee (NFR-5.6 & FR-15):</strong>
+                Sponsored placements are capped at a maximum ratio of <strong>1 sponsored product per 5 search results</strong> (slots #1, #6, #11). Organic scores are never modified.
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-clean">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Target Slot</th>
+                    <th>Schedule Duration</th>
+                    <th>Current Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if placements_with_status %}
+                    {% for item in placements_with_status %}
+                    {% set placement = item.placement %}
+                    {% set status = item.status %}
+                    <tr>
+                        <td>
+                            <strong>{{ placement.product.name }}</strong>
+                            <div class="text-muted text-xs">Product ID: #{{ placement.product_id }}</div>
+                        </td>
+                        <td>
+                            <span class="badge badge-warning" style="font-weight: 700;">
+                                Slot #{{ placement.slot_position }}
+                            </span>
+                        </td>
+                        <td>
+                            <div>
+                                <span class="text-sm">{{ placement.start_date.strftime('%b %d, %Y') }}</span>
+                                <span class="text-muted text-xs">&rarr;</span>
+                                <span class="text-sm font-bold">{{ placement.end_date.strftime('%b %d, %Y') }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge {{ status.class }}">
+                                {{ status.label }}
+                            </span>
+                            <small class="d-block text-muted text-xs mt-1">{{ status.message }}</small>
+                        </td>
+                        <td>
+                            <div class="action-btn-group">
+                                <a href="{{ url_for('admin.edit_sponsor', placement_id=placement.placement_id) }}" class="btn btn-xs btn-outline">Edit</a>
+                                <form action="{{ url_for('admin.delete_sponsor', placement_id=placement.placement_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Remove sponsored placement for {{ placement.product.name }}?');">
+                                    {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                                    <button type="submit" class="btn btn-xs btn-outline-danger">Remove</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">
+                        No sponsored placements active or scheduled for this category. Click <strong>+ New Placement</strong> to create one.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
