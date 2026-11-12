@@ -111,3 +111,18 @@ This log records technical roadblocks, runtime exceptions, algorithmic edge case
   Updated the controller query to join `Category` and strictly filter by `Category.company_id == current_user.company_id` (or active `inspect_company_id` when Superadmin is impersonating a tenant). Authored unit test `test_tenant_insights_isolation()` in `tests/test_insights.py` to ensure complete multi-tenant boundaries.
 
 ---
+
+### Entry 7 • Phase 6: Catalog Seeding Fixture Integrity & Cascade Dependencies
+* **Date**: 2026-11-03
+* **Component / File**: `seed.py` (`e-commerce-website` & `Product-Catalogue-Ranked-Search`)
+* **Error / Issue Description**:
+  ```text
+  sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: products.category_id
+  during automated multi-tenant seed reset.
+  ```
+* **Root Cause**:
+  The seeding script wiped existing records using `Product.query.delete()`, but because SQLite foreign key enforcement was active, orphaned dynamic attribute values and child order references caused foreign key violations when rebuilding the 16+ Noise consumer catalog.
+* **Resolution & Applied Fix**:
+  Refactored `seed.py` to execute a structured top-down teardown and bottom-up reconstruction inside a transaction block (`db.session.begin_nested()`). Ensured parent companies (`Company ID: 1`) and category nodes are committed and refreshed before binding dependent product specifications, dynamic attributes, and image assets. Verified with automated integration test suite (`tests/test_storefront.py` & `tests/test_routes.py`).
+
+---

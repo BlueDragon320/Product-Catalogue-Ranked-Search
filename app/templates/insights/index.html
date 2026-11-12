@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+{% block title %}INTELLIGENCE // SEARCH & DISCOVERY INSIGHTS — Product Catalogue Ranked Search{% endblock %}
+
+{% block content %}
+<!-- Intelligence Hero Section -->
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+        <div>
+            <div class="meta-tag font-mono text-xs mb-1">// TELEMETRY & DISCOVERY ENGINE</div>
+            <h1 class="m-0" style="font-size: clamp(2rem, 4vw, 3.2rem); letter-spacing: -0.04em; line-height: 0.95;">
+                CATALOG INSIGHTS &amp; SEARCH ANALYTICS
+            </h1>
+        </div>
+        <div class="d-flex gap-2 font-mono text-xs flex-wrap">
+            {% if scoped_company %}
+                <span class="badge badge-warning">[TENANT: {{ scoped_company.name }}]</span>
+            {% else %}
+                <span class="badge badge-neutral">[SCOPE: GLOBAL PLATFORM]</span>
+            {% endif %}
+            <span class="badge badge-neutral">[SYS.ANALYTICS: REALTIME]</span>
+            <span class="badge {{ 'badge-success' if is_cap_compliant else 'badge-warning' }}">
+                [SPONSOR_CAP: {{ current_sponsor_ratio }}% / 20.0% MAX]
+            </span>
+        </div>
+    </div>
+    <p class="text-muted text-sm mb-4" style="max-width: 760px; line-height: 1.5;">
+        Monitor real-time search frequency, inspect product discovery leaderboards, evaluate multi-criteria ranking sensitivity, and verify platform anti-bias placement compliance.
+    </p>
+
+    {% if not (scoped_company and not all_categories) %}
+    <!-- Interactive Search Bar Form -->
+    <form method="GET" action="{{ url_for('insights.index') }}" class="p-3 bg-paper-dark border-hairline mb-2">
+        <div class="meta-tag font-mono text-xs mb-2">// INTERACTIVE CATALOG SEARCH &amp; RANKING SIMULATION</div>
+        <div class="d-flex gap-2 flex-wrap mb-2">
+            <div style="flex: 2; min-width: 240px;">
+                <input type="text" name="q" value="{{ search_query }}" 
+                       class="form-control font-mono" placeholder="Enter product name, keyword, or brand (e.g. Sony, boAt, Laptop, Battery)...">
+            </div>
+            <div style="flex: 1; min-width: 180px;">
+                <select name="category_id" class="form-control font-mono">
+                    <option value="">[ALL DOMAINS]</option>
+                    {% for cat in all_categories %}
+                    <option value="{{ cat.category_id }}" {{ 'selected' if selected_category_id == cat.category_id else '' }}>
+                        {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary font-mono text-xs">
+                RUN SEARCH &rarr;
+            </button>
+            {% if search_query or selected_category_id or filter_attr_id or filter_min is not none or filter_max is not none %}
+            <a href="{{ url_for('insights.index') }}" class="btn btn-outline font-mono text-xs">
+                RESET [×]
+            </a>
+            {% endif %}
+        </div>
+        <!-- FR-21: Attribute Range Filter Controls -->
+        <div class="d-flex gap-2 flex-wrap align-items-center pt-2 border-top border-hairline">
+            <div class="font-mono text-xs text-muted" style="min-width: 110px;">// RANGE FILTER:</div>
+            <div style="flex: 2; min-width: 200px;">
+                <select name="filter_attr_id" class="form-control font-mono text-xs">
+                    <option value="">[ALL ATTRIBUTES / NO FILTER]</option>
+                    {% for attr in available_attributes %}
+                    <option value="{{ attr.attribute_id }}" {{ 'selected' if filter_attr_id == attr.attribute_id else '' }}>
+                        {{ attr.name }}{% if not selected_category_id and attr.category %} ({{ attr.category.name }}){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <input type="number" step="any" name="filter_min" value="{{ filter_min if filter_min is not none else '' }}" 
+                       class="form-control font-mono text-xs" placeholder="Min val (inclusive)">
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <input type="number" step="any" name="filter_max" value="{{ filter_max if filter_max is not none else '' }}" 
+                       class="form-control font-mono text-xs" placeholder="Max val (inclusive)">
+            </div>
+            {% if filter_attr_id or filter_min is not none or filter_max is not none %}
+            <span class="badge badge-warning font-mono text-xs">[FILTER ACTIVE]</span>
+            {% endif %}
+        </div>
+    </form>
+    {% endif %}
+</div>
+
+{% if scoped_company and not all_categories %}
+<!-- Empty Tenant Catalog State -->
+<div class="card p-5 text-center my-4 font-mono">
+    <div class="meta-tag font-mono text-xs mb-2">// TENANT DATA ISOLATION ACTIVE</div>
+    <h2 style="font-size: 1.6rem; letter-spacing: -0.03em;" class="mb-2">NO CATALOG DATA FOUND</h2>
+    <p class="text-muted text-sm mb-4" style="max-width: 580px; margin: 0 auto; line-height: 1.6;">
+        All categories and products for <strong>{{ scoped_company.name }}</strong> have been removed or not yet provisioned. The Insights Engine is strictly isolated to your tenant domain and will not expose data from other registered companies.
+    </p>
+    <div>
+        <a href="{{ url_for('admin.new_category') }}" class="btn btn-primary font-mono text-xs">
+            + CREATE FIRST CATEGORY IN COMPANY HUB &rarr;
+        </a>
+    </div>
+</div>
+{% else %}
+
+<!-- Search Results Display (when search or filter executed) -->
+{% if search_query or filter_attr_id or filter_min is not none or filter_max is not none or search_results %}
+<div class="card mb-4 p-4 border-hairline">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <div class="meta-tag font-mono text-xs">// QUERY RESULTS MATRIX</div>
+            <h2 class="m-0" style="font-size: 1.35rem; letter-spacing: -0.03em;">
+                {% if search_query %}
+                Query: "{{ search_query }}"
+                {% else %}
+                Filtered Catalog Results
+                {% endif %}
+            </h2>
+        </div>
+        <span class="badge badge-neutral font-mono text-xs">{{ search_results|length }} PRODUCTS MATCHED</span>
+    </div>
+
+    {% if search_results %}
+    <div class="table-responsive">
+        <table class="table w-100">
+            <thead>
+                <tr>
+                    <th class="font-mono text-xs" style="width: 70px;">RANK</th>
+                    <th>PRODUCT</th>
+                    <th class="font-mono text-xs">DOMAIN</th>
+                    <th class="font-mono text-xs text-center">SEARCH HITS</th>
+                    <th class="font-mono text-xs text-center">COMPOSITE SCORE</th>
+                    <th class="font-mono text-xs text-end">TAGS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in search_results %}
+                {% set p = item.product %}
+                <tr>
+                    <td class="font-mono">
+                        <span class="badge {{ 'badge-success' if item.rank == 1 else 'badge-neutral' }}">
+                            #{{ "%02d"|format(item.rank) }}
+                        </span>
+                    </td>
+                    <td>
+                        <strong>{{ p.name }}</strong>
+                    </td>
+                    <td class="font-mono text-xs text-muted">
+                        {{ p.category.name if p.category else 'N/A' }}
+                    </td>
+                    <td class="text-center font-mono text-xs">
+                        {{ p.search_count or 0 }}
+                    </td>
+                    <td class="text-center font-mono">
+                        <strong>{{ format_score(p.composite_score) }}</strong>
+                    </td>
+                    <td class="text-end font-mono text-xs">
+                        {% if item.is_sponsored %}
+                        <span class="badge badge-warning">⭐ SPONSORED</span>
+                        {% else %}
+                        <span class="badge badge-neutral">ORGANIC</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-4 font-mono text-xs text-muted">
+        {% if search_query %}
+        NO PRODUCTS MATCHED QUERY "{{ search_query }}".
+        {% else %}
+        NO PRODUCTS MATCHED FILTER CRITERIA.
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Key Metrics Grid -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[01]</span>
+            <span class="badge badge-neutral text-xs font-mono">VOLUME</span>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ "%02d"|format(recent_queries|length) if recent_queries|length < 100 else recent_queries|length }}</span>
+            <span class="kpi-label">RECENT SEARCHES</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[02]</span>
+            <span class="badge badge-neutral text-xs font-mono">CATALOG</span>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ "%02d"|format(total_products_count) if total_products_count < 100 else total_products_count }}</span>
+            <span class="kpi-label">RANKED PRODUCTS</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[03]</span>
+            <span class="badge badge-neutral text-xs font-mono">DOMAINS</span>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ "%02d"|format(all_categories|length) if all_categories|length < 100 else all_categories|length }}</span>
+            <span class="kpi-label">ACTIVE CATEGORIES</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[04]</span>
+            <span class="badge badge-neutral text-xs font-mono">POLICY</span>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ current_sponsor_ratio }}%</span>
+            <span class="kpi-label">SPONSOR RATIO (≤20%)</span>
+        </div>
+    </div>
+</div>
+
+<!-- Two-Column Analytics Layout -->
+<div class="row mb-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+    <!-- Column 1: Most Searched Products -->
+    <div class="card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <div class="meta-tag font-mono text-xs">// POPULARITY LEADERBOARD</div>
+                <h3 class="m-0" style="font-size: 1.2rem; letter-spacing: -0.03em;">Most Searched Products</h3>
+            </div>
+            <span class="badge badge-neutral font-mono text-xs">TOP HIT COUNTER</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table w-100 font-mono text-xs">
+                <thead>
+                    <tr>
+                        <th>PRODUCT</th>
+                        <th>DOMAIN</th>
+                        <th class="text-center">SEARCHES</th>
+                        <th class="text-end">SCORE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in top_searched_products %}
+                    <tr>
+                        <td>
+                            <strong>{{ p.name }}</strong>
+                        </td>
+                        <td class="text-muted">
+                            {{ p.category.name if p.category else 'N/A' }}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge badge-neutral">{{ p.search_count or 0 }} HITS</span>
+                        </td>
+                        <td class="text-end">
+                            <strong>{{ format_score(p.composite_score) }}</strong>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-3">NO SEARCH DATA YET</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Column 2: Category Search Distribution & Score Spread -->
+    <div class="card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <div class="meta-tag font-mono text-xs">// TRAFFIC DISTRIBUTION</div>
+                <h3 class="m-0" style="font-size: 1.2rem; letter-spacing: -0.03em;">Domain Search Interest</h3>
+            </div>
+            <span class="badge badge-neutral font-mono text-xs">ENGAGEMENT</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table w-100 font-mono text-xs">
+                <thead>
+                    <tr>
+                        <th>DOMAIN</th>
+                        <th>TENANT</th>
+                        <th class="text-center">ITEMS</th>
+                        <th class="text-center">SEARCH HITS</th>
+                        <th class="text-end">SCORE SPREAD</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c_data in category_insights %}
+                    <tr>
+                        <td>
+                            <strong>{{ c_data.category.name }}</strong>
+                        </td>
+                        <td class="text-muted">
+                            {{ c_data.category.company.name if c_data.category.company else 'N/A' }}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge badge-neutral">{{ c_data.product_count }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge badge-success">{{ c_data.product_hits }} HITS</span>
+                        </td>
+                        <td class="text-end">
+                            <strong>{{ format_score(c_data.avg_score) }}</strong>
+                            <span class="text-muted text-xs d-block">({{ format_score(c_data.min_score) }} &ndash; {{ format_score(c_data.max_score) }})</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Lower Two-Column Section: Weight Sensitivity & Sponsor Policy -->
+<div class="row mb-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+    <!-- Weight Sensitivity Analysis -->
+    <div class="card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <div class="meta-tag font-mono text-xs">// SENSITIVITY CALIBRATION</div>
+                <h3 class="m-0" style="font-size: 1.2rem; letter-spacing: -0.03em;">Ranking Criteria Distribution</h3>
+            </div>
+            <span class="badge badge-neutral font-mono text-xs">NORMALIZED WEIGHTS</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table w-100 font-mono text-xs">
+                <thead>
+                    <tr>
+                        <th>CRITERION</th>
+                        <th>DOMAIN</th>
+                        <th class="text-center">WEIGHT</th>
+                        <th class="text-end">OPTIMIZATION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attr in attributes_by_weight %}
+                    <tr>
+                        <td><strong>{{ attr.name }}</strong></td>
+                        <td class="text-muted">{{ attr.category.name if attr.category else 'N/A' }}</td>
+                        <td class="text-center">
+                            <span class="badge badge-neutral font-bold">{{ attr.weight }}%</span>
+                        </td>
+                        <td class="text-end">
+                            {% if attr.lower_is_better %}
+                            <span class="badge badge-warning">LOWER IS BETTER</span>
+                            {% else %}
+                            <span class="badge badge-neutral">HIGHER IS BETTER</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Anti-Bias Placement Policy Monitor -->
+    <div class="card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <div class="meta-tag font-mono text-xs">// INTEGRITY ASSURANCE</div>
+                <h3 class="m-0" style="font-size: 1.2rem; letter-spacing: -0.03em;">Sponsor Anti-Bias Compliance</h3>
+            </div>
+            <span class="badge {{ 'badge-success' if is_cap_compliant else 'badge-danger' }} font-mono text-xs">
+                {{ 'VERIFIED COMPLIANT' if is_cap_compliant else 'POLICY BREACH' }}
+            </span>
+        </div>
+
+        <p class="text-muted font-mono text-xs mb-3" style="line-height: 1.6;">
+            POLICY SPEC: Sponsored placements are strictly restricted to capped intervals (Slot 1, 6, 11) with a ceiling of 1 sponsored item per 5 organic items (maximum 20.0% density).
+        </p>
+
+        <div class="table-responsive mb-3">
+            <table class="table w-100 font-mono text-xs">
+                <tbody>
+                    <tr>
+                        <td class="text-muted" style="width: 48%;">CURRENT SPONSOR RATIO</td>
+                        <td>
+                            <strong>{{ current_sponsor_ratio }}%</strong>
+                            <span class="text-muted" style="margin-left: 6px;">({{ active_sponsor_count }} of {{ total_products_count }} items)</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">POLICY THRESHOLD CEILING</td>
+                        <td>
+                            <strong>20.0% MAXIMUM</strong>
+                            <span class="badge {{ 'badge-success' if is_cap_compliant else 'badge-danger' }} text-xs" style="margin-left: 6px;">
+                                {{ 'OK (COMPLIANT)' if is_cap_compliant else 'OVER-CAP' }}
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Search Stream -->
+        <div class="meta-tag font-mono text-xs mb-2">// RECENT SEARCH STREAM</div>
+        {% if recent_queries %}
+        <div class="d-flex gap-2 flex-wrap font-mono text-xs">
+            {% for q in recent_queries %}
+            <span class="badge badge-neutral" style="padding: 0.35rem 0.65rem;">
+                "{{ q.query_text }}" &bull; {{ q.results_count }} hits
+            </span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted font-mono text-xs m-0">No recent query events logged.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

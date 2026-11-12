@@ -56,6 +56,8 @@ class Category(db.Model):
     category_id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.company_id'), index=True)
     name = db.Column(db.String(100), nullable=False)
+    display_attr_1 = db.Column(db.String(100), nullable=True)
+    display_attr_2 = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     attributes = db.relationship('Attribute', backref='category', lazy='dynamic')
