@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}CONSOLE // DASHBOARD — Product Catalogue Ranked Search{% endblock %}
+
+{% block content %}
+{% if inspecting and inspect_company %}
+<div class="alert alert-warning d-flex justify-content-between align-items-center mb-3 font-mono text-xs">
+    <span>[SUPERADMIN INSPECTION ACTIVE &bull; CURRENT TENANT: {{ inspect_company.name }}]</span>
+    <a href="{{ url_for('admin.exit_inspect') }}" class="btn btn-xs btn-outline">[EXIT INSPECTION ×]</a>
+</div>
+{% endif %}
+
+<!-- Welcome & Action Banner -->
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-4">
+    <div>
+        <div class="meta-tag font-mono text-xs mb-1">// OPERATOR DASHBOARD</div>
+        <h1 class="m-0" style="font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -0.04em;">COMPANY CONSOLE</h1>
+        <p class="text-muted font-mono text-xs m-0 mt-1">
+            OPERATOR: <strong>{{ current_user.username }}</strong> &bull; TENANT: <strong>{{ company.name }}</strong>
+        </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap font-mono">
+        <a href="{{ url_for('admin.new_category') }}" class="btn btn-primary btn-sm">+ NEW CATEGORY</a>
+        <a href="{{ url_for('insights.index') }}" class="btn btn-outline btn-sm">INSIGHTS ↗</a>
+    </div>
+</div>
+
+<!-- KPI Metrics Grid -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[01]</span>
+            <a href="{{ url_for('admin.list_categories') }}" class="btn btn-xs btn-outline font-mono">LIST &rarr;</a>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ "%02d"|format(total_categories) if total_categories < 100 else total_categories }}</span>
+            <span class="kpi-label">ACTIVE CATEGORIES</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[02]</span>
+            <a href="{{ url_for('admin.list_categories') }}" class="btn btn-xs btn-outline font-mono">BROWSE &rarr;</a>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ "%02d"|format(total_products) if total_products < 100 else total_products }}</span>
+            <span class="kpi-label">INDEXED PRODUCTS</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[03]</span>
+            <a href="{{ url_for('admin.list_categories') }}" class="btn btn-xs btn-outline font-mono">CRITERIA &rarr;</a>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ "%02d"|format(total_attributes) if total_attributes < 100 else total_attributes }}</span>
+            <span class="kpi-label">CONFIGURED CRITERIA</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <span class="kpi-icon font-mono">[04]</span>
+            <a href="{{ url_for('admin.list_categories') }}" class="btn btn-xs btn-outline font-mono">SCHEDULE &rarr;</a>
+        </div>
+        <div class="kpi-info mt-2">
+            <span class="kpi-val">{{ "%02d"|format(active_sponsors_count) if active_sponsors_count < 100 else active_sponsors_count }}</span>
+            <span class="kpi-label">SPONSORED SLOTS ACTIVE</span>
+        </div>
+    </div>
+</div>
+
+<!-- Category Management Section -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <div class="meta-tag font-mono text-xs">// MANAGEMENT MATRIX</div>
+            <h2 class="m-0" style="font-size: 1.35rem; letter-spacing: -0.03em;">Category Command Center</h2>
+        </div>
+        <a href="{{ url_for('admin.list_categories') }}" class="btn btn-xs btn-outline font-mono">TABLE MATRIX &rarr;</a>
+    </div>
+
+    {% if category_summaries %}
+    <div class="category-admin-grid">
+        {% for item in category_summaries %}
+        {% set cat = item.category %}
+        {% set st = item.stats %}
+        <div class="cat-admin-card card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <span class="font-mono text-xs text-muted">[DOMAIN #{{ cat.category_id }}]</span>
+                    <h3 class="cat-card-title m-0">
+                        <a href="{{ url_for('admin.category_overview', category_id=cat.category_id) }}">{{ cat.name }}</a>
+                    </h3>
+                </div>
+                <span class="badge font-mono text-xs {{ 'badge-success' if st.is_weight_valid else 'badge-warning' }}">
+                    {{ st.total_weight }}% {{ 'OK' if st.is_weight_valid else 'CALIB_REQ' }}
+                </span>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="cat-card-stats d-flex gap-2 my-2 font-mono text-xs">
+                <span class="badge badge-neutral">{{ st.product_count }} ITEMS</span>
+                <span class="badge badge-neutral">{{ st.active_attribute_count }} CRITERIA</span>
+                {% if st.active_sponsor_count > 0 %}
+                <span class="badge badge-warning">{{ st.active_sponsor_count }} SPONSORED</span>
+                {% endif %}
+            </div>
+
+            <!-- Action Short-links -->
+            <div class="cat-card-actions mt-3 d-flex flex-wrap gap-1 font-mono">
+                <a href="{{ url_for('admin.category_overview', category_id=cat.category_id) }}" class="btn btn-xs btn-primary">
+                    [HUB]
+                </a>
+                <a href="{{ url_for('admin.list_attributes', category_id=cat.category_id) }}" class="btn btn-xs btn-outline">
+                    [WEIGHTS]
+                </a>
+                <a href="{{ url_for('admin.list_products', category_id=cat.category_id) }}" class="btn btn-xs btn-outline">
+                    [PRODUCTS]
+                </a>
+                <a href="{{ url_for('admin.list_sponsors', category_id=cat.category_id) }}" class="btn btn-xs btn-outline">
+                    [SPONSORS]
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 font-mono text-xs text-muted">
+        <p>NO DOMAINS CONFIGURED.</p>
+        <a href="{{ url_for('admin.new_category') }}" class="btn btn-primary btn-sm mt-2">+ CREATE FIRST CATEGORY</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

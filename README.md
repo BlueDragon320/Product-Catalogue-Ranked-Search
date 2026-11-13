@@ -1,191 +1,121 @@
-# Product Catalogue Ranked Search 🔍⚡
+# Product Catalogue Ranked Search
 
-> A high-precision, multi-tenant B2B ranking microservice and catalog intelligence engine. Evaluates products across user-weighted multi-criteria dimensions, normalizes continuous and discrete metrics, enforces mathematical 100% weight allocation rules, and interleaves date-capped sponsored placements under anti-bias policies.
-
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Framework-Flask_3.x-000000?style=flat-square&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
-[![SQLAlchemy](https://img.shields.io/badge/ORM-SQLAlchemy-D71F00?style=flat-square)](https://www.sqlalchemy.org/)
-[![Pytest](https://img.shields.io/badge/Testing-Pytest-0A9EDC?style=flat-square&logo=pytest&logoColor=white)](https://pytest.org/)
-[![Architecture](https://img.shields.io/badge/Microservice-Port_5000-059669?style=flat-square)](#architecture--port-mapping)
+A multi-tenant, high-precision ranking microservice and catalog intelligence engine. Evaluates products across user-weighted multi-criteria dimensions, normalizes continuous numeric and discrete binary metrics, enforces mathematical 100% weight allocation rules, and interleaves date-capped sponsored placements under anti-bias policies.
 
 ---
 
-## 🌟 Key Capabilities
+## Key Capabilities
 
-* **Dynamic Multi-Criteria Attribute Modeling:**
-  * Define category-specific scoring criteria per product domain.
-  * Supports continuous numeric metrics (e.g., Battery Life, Price, Rating) and discrete binary metrics (e.g., Active Noise Cancelling on a 0.0/1.0 scale).
-  * Flexible metric directionality (`lower_is_better` for cost/latency metrics like Price).
-
-* **Strict 100% Weight Allocation:**
-  * Enforces category weights summing strictly to **100.0%**.
-  * Real-time validation indicator API with sub-300ms response time and client-side interactive weight sliders.
-
-* **Deterministic Min-Max Normalization & Scoring:**
-  * Mathematical Min-Max normalization mapping raw values into a unified $[0.0, 1.0]$ utility space:
-    $$\text{Score}_{\text{benefit}} = \frac{x - \min}{\max - \min}, \quad \text{Score}_{\text{cost}} = \frac{\max - x}{\max - \min}$$
-  * Multi-tier deterministic tie-breaking for fair, predictable rankings:
-    `Composite Score DESC` &rarr; `Creation Date DESC` &rarr; `Product ID ASC`.
-
-* **Anti-Bias Sponsored Placement Override:**
-  * Date-scheduled sponsored promotions interleaved at fixed 1:5 intervals (slots 1, 6, 11) with a strict 20% placement cap.
-  * Preserves raw organic composite scores without score distortion.
-
-* **Multi-Tenant Architecture & Data Isolation:**
-  * Complete data isolation across tenant companies with role-based access control.
-  * Superadmin Platform Console for tenant provisioning, manager account creation, cascade deletion, and live inspection auditing.
-
-* **B2B REST API Microservice:**
-  * External RESTful JSON API endpoints (`/api/v1/search`, `/api/v1/categories`, `/api/v1/product/<id>`) allowing e-commerce storefronts to execute live ranked queries, dynamically inject customer preference weights, and retrieve full score contribution telemetry.
+- **Dynamic Multi-Criteria Attribute Modeling (FR-1, FR-2)**: Define custom attributes per domain category. Supports continuous `numeric` ranges and discrete `binary` criteria (Yes/No boolean evaluated on a 0.0/1.0 scale). Configurable metric directionality (`lower_is_better` for metrics like Price and Latency).
+- **Strict 100% Weight Allocation (FR-3, NFR-5.1)**: Enforces category weights summing strictly to 100.0%. Provides real-time AJAX validation indicator with sub-300ms response time.
+- **Deterministic Weighted Scoring & Tie-Breaking (FR-9, FR-10, FR-13)**: Min-Max normalization maps disparate attribute measurements to a unified [0.0, 1.0] scale. Three-tier deterministic tie-breaking resolves identical scores: `Composite Score DESC` &rarr; `Creation Date DESC` &rarr; `Product ID ASC`.
+- **Anti-Bias Sponsored Placement Override (FR-14 – FR-17, NFR-5.6)**: Date-scheduled sponsored promotions interleaved at fixed 1:5 intervals (slots 1, 6, 11) with a strict 20.0% placement cap. Preserves raw organic composite scores without score distortion.
+- **Attribute Range Filtering (FR-21)**: Pre-ranking filtering allowing users and client applications to specify attribute threshold bounds (`filter_attr_id`, `filter_min`, `filter_max`) to filter products before score computation and ranking.
+- **Multi-Tenant Architecture & Platform Administration (FR-18, FR-19, FR-20)**: Complete data isolation across tenant companies. Platform Superadmin console enables company provisioning, cascade deletion, tenant inspection auditing, and direct tenant user password resets.
+- **B2B REST API Microservice (FR-12, FR-19, FR-21)**: External RESTful JSON API (`/api/v1/search`, `/api/v1/categories`, `/api/v1/product/<id>`) allowing e-commerce storefronts and external platforms to execute searches, apply dynamic personalization weights, and retrieve full score contribution telemetry.
+- **Catalog Intelligence & Search Analytics (FR-12, FR-20)**: Interactive query simulation, search frequency hit counters, category popularity distribution, attribute sensitivity analysis, and anti-bias compliance auditing.
 
 ---
 
-## 🏗️ Architecture & Port Mapping
+## Tech Stack
 
-```
-+-------------------------------------------------------------+
-|               Noise E-Commerce Storefront                   |
-|                   (Client on Port 8000)                     |
-+-------------------------------------------------------------+
-                              │
-                    REST API (JSON over HTTP)
-                              ▼
-+-------------------------------------------------------------+
-|            Product-Catalogue-Ranked-Search Engine           |
-|                 (Microservice on Port 5000)                 |
-|                                                             |
-|  [ Auth & Tenants ]     [ Criteria / Weights ]   [ Math ]   |
-|  - Login / Session      - Attribute Modeling     - Min-Max  |
-|  - Tenant Isolation     - 100% Weight Sum API    - Ranking  |
-|                                                             |
-|  [ Sponsored Engine ]   [ Search Analytics ]     [ Admin ]  |
-|  - 1:5 Interleaving     - Top Query Counters     - Console  |
-|  - 20% Placement Cap    - Sensitivity Analysis   - Auditing |
-+-------------------------------------------------------------+
-                              │
-                              ▼
-                SQLite Database (ranking_engine.db)
-```
+- **Backend:** Python 3.10+, Flask
+- **Database / ORM:** SQLAlchemy ORM with SQLite (Development/Test) and PostgreSQL compatibility
+- **Authentication & Security:** Flask-Login, Werkzeug (salted password hashing, role-based access control)
+- **Frontend / UI:** Technical Minimalist design system (Space Grotesk, General Sans, JetBrains Mono, crisp 1px borders, zero box-shadows)
+- **Testing:** Pytest, coverage test suite
 
 ---
 
-## 📁 Repository Structure
+## Quick Setup Instructions
 
-```text
-Product-Catalogue-Ranked-Search/
-├── app/
-│   ├── __init__.py            # Flask app factory, extension initialization
-│   ├── models.py              # Declarative models: Company, User, Category, Attribute, Product
-│   ├── admin/                 # Platform administration blueprint
-│   │   ├── forms.py           # Forms for company, category, and attribute management
-│   │   └── routes.py          # Category/attribute CRUD, tenant switcher, user admin
-│   ├── api/                   # External B2B REST API & Weight Validation
-│   │   └── routes.py          # /api/v1/search, /api/category/<id>/weight-total
-│   ├── auth/                  # Authentication & session blueprint
-│   │   ├── forms.py           # LoginForm & authentication validation
-│   │   └── routes.py          # Login, logout, session management
-│   ├── ranking/               # Mathematical normalization & ranking engine
-│   │   ├── engine.py          # Normalization math, composite scoring, tie-breaking
-│   │   └── helpers.py         # Sponsored interleaving, validation helpers
-│   ├── insights/              # Search intelligence & analytics dashboard
-│   │   └── routes.py          # Query hit counters, distribution, weight sensitivity
-│   ├── static/                # CSS design system & JavaScript widgets
-│   │   ├── css/style.css      # Dark-cyan technical minimalist design tokens
-│   │   └── js/weight_check.js # Real-time 100% weight meter widget
-│   └── templates/             # Jinja2 template hierarchy
-│       ├── base.html          # Shell layout & top navigation
-│       ├── admin/             # Platform admin & category hub views
-│       ├── auth/              # Login & registration views
-│       └── insights/          # Insights search simulator & analytics views
-├── docs/                      # Technical manuals & API specifications
-│   ├── api_reference.md       # Full OpenAPI-compliant REST specification
-│   └── setup_guide.md         # Comprehensive setup & configuration guide
-├── tests/                     # Automated test suites
-│   ├── conftest.py            # Pytest test fixtures & mock client
-│   ├── test_models.py         # Model & weight sum validation unit tests
-│   ├── test_engine.py         # Normalization math & tie-breaking test suite
-│   ├── test_routes.py         # Route integration & role authorization tests
-│   ├── test_api.py            # REST API search & ranking contract tests
-│   ├── test_sponsor.py        # Sponsored placement capping & date tests
-│   └── test_edge_cases.py     # Zero weight, empty catalog, and boundary tests
-├── documents/                 # College & Engine Deliverables (Word, Excel, SQL)
-│   ├── DATABASE_QUERIES_ENGINE1.sql # Engine 1: Pure RDBMS DDL, ALTER, DML & audit queries
-│   ├── TEST_CASES_ENGINE4.xlsx      # Engine 4: Master Test Cases Excel matrix (45 scenarios)
-│   ├── FOUR_ENGINES_PROJECT_MANUAL_AND_VIVA_GUIDE.docx # Word project manual & viva prep
-│   └── MASTER_DEVELOPMENT_PHASE_GUIDE.docx             # 6-Week development manual (.docx)
-├── markdown/                  # Developer logs & markdown manuals
-│   ├── DEV_LOGS_VAIBHAV.md    # Daily developer issue & fix resolution log
-│   ├── FOUR_ENGINES_PROJECT_MANUAL_AND_VIVA_GUIDE.md   # 4-Engine manual in Markdown
-│   └── MASTER_DEVELOPMENT_PHASE_GUIDE.md               # Master phase guide in Markdown
-├── config.py                  # Environment configuration classes
-├── requirements.txt           # Python package dependencies
-├── run.py                     # Entry point (Port 5000)
-└── seed.py                    # Multi-tenant demo dataset seeder
-```
+1. **Clone the repository:**
+   ```bash
+   git clone <repo-url>
+   cd weighted-ranking-engine
+   ```
+
+2. **Create and activate a virtual environment:**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Initialize database & seed demo dataset:**
+   ```bash
+   python seed.py
+   ```
+   *Seeds platform superadmin, tenant organizations, categories, attributes, products, and query analytics.*
+
+5. **Run development server:**
+   ```bash
+   python run.py
+   ```
+   *The application starts at `http://127.0.0.1:5000/`.*
 
 ---
 
-## 🚀 Quick Start & Setup
+## Automated Test Suite
 
-### 1. Prerequisites
-* Python 3.10 or higher
-* Git
-
-### 2. Clone & Setup Virtual Environment
-```bash
-# Clone the repository
-git clone https://github.com/BlueDragon320/Product-Catalogue-Ranked-Search.git
-cd Product-Catalogue-Ranked-Search
-
-# Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate       # On Linux / macOS
-# .\venv\Scripts\activate      # On Windows
-```
-
-### 3. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Run the Microservice
-```bash
-python run.py
-```
-The service will start at **`http://127.0.0.1:5000/`**.
-
----
-
-## 🧪 Running Automated Tests
-
-Run the complete test suite with verbose reporting:
-
+Run the full pytest suite:
 ```bash
 pytest -v
 ```
 
-To run a specific module:
-```bash
-pytest tests/test_engine.py -v     # Normalization & scoring math
-pytest tests/test_models.py -v     # Weight validation & models
-pytest tests/test_api.py -v        # B2B REST Search API endpoints
+---
+
+## B2B REST API Overview
+
+External client applications interact with the ranking microservice using standard HTTP requests:
+
+- `GET /api/v1/search?company_id=<id>&q=<query>`: Free-text search and weighted product ranking.
+- `POST /api/v1/search`: Query ranking with dynamic personalization weights payload and attribute range filters (`filter_attr_id`, `filter_min`, `filter_max`).
+- `GET /api/v1/categories?company_id=<id>`: Retrieve tenant categories, active attributes, scales, and data types.
+- `GET /api/v1/product/<product_id>?company_id=<id>`: Detailed product metrics and full score mathematical breakdown.
+- `GET /api/weight-total/<category_id>`: Check active attribute weight summation for category calibration.
+
+For complete API documentation, request parameters, and response schemas, see [docs/api_reference.md](docs/api_reference.md).
+
+---
+
+## Project Structure
+
+```
+weighted-ranking-engine/
+├── app/
+│   ├── admin/           # Platform superadmin & company hub blueprint
+│   ├── api/             # B2B search REST API & weight validation endpoints
+│   ├── auth/            # Authentication & role authorization blueprint
+│   ├── insights/        # Catalog intelligence, analytics & search simulation
+│   ├── ranking/         # Core engine: normalization, scoring & tie-break logic
+│   ├── static/          # CSS design system (Technical Minimalist) & client JS
+│   ├── templates/       # Jinja2 presentation templates
+│   ├── models.py        # SQLAlchemy entities: Company, Category, Attribute, Product, User, SearchLog
+│   └── __init__.py      # Flask application factory
+├── docs/                # Setup and API reference documentation
+├── tests/               # Pytest automated test suite
+├── config.py            # Environment configuration (Dev, Test, Prod)
+├── run.py               # Application entry point
+├── seed.py              # Multi-tenant demo dataset generator
+└── requirements.txt     # Python dependencies
 ```
 
 ---
 
-## 📡 Key REST API Endpoints
+## Development Team
 
-| Method | Endpoint | Description |
-| :---: | :--- | :--- |
-| `GET` | `/api/v1/categories` | Retrieve all active categories with defined attributes |
-| `POST` | `/api/v1/search` | Execute multi-criteria ranked search with dynamic weights |
-| `GET` | `/api/v1/product/<id>` | Fetch detailed product metadata and normalized score breakdown |
-| `GET` | `/api/category/<id>/weight-total` | Return current sum of active weights for a category |
-| `POST` | `/api/category/<id>/weight-validate` | Validate whether proposed weights sum to 100.0% |
+- **Vaibhav** (Dev-A) — Backend, Ranking Engine, REST API & Data Modeling
+- **Shrinivas** (Dev-B) — Frontend, UI/UX Design System, Documentation & SRS Lead
 
 ---
 
-## 👥 Authors & Collaborators
+## License
 
-* **Vaibhav Patil** (`01fe24bca300`) — System Architecture, Scoring Engine, REST APIs & Admin Workflows
-* **Shrinivas** (`01fe24bca311`) — Weight Validation, UI Design Tokens, Edge-Case Hardening & Docs
+**Proprietary & Commercial Software License — All Rights Reserved.**  
+Copyright © 2026 Vaibhav (01fe24bca300) & Shrinivas (01fe24bca311).  
+See [LICENSE](LICENSE) for details.
