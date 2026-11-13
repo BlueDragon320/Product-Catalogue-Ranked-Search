@@ -13,4 +13,8 @@ instance/
 .coverage
 htmlcov/
 .DS_Store
+*.pyc
+.env
 knowledgebase.md
+function_map.md
+README_GIT_PUSH.md
