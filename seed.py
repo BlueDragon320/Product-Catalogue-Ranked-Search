@@ -1,18 +1,25 @@
-"""seed.py — Populate database with multi-tenant companies, catalog data, and search analytics."""
+"""seed.py — Populate database with Noise Official catalog, attributes, and search analytics."""
+import os
+from datetime import date, datetime, timedelta, timezone
 from app import create_app, db
-from app.models import User, Company, Category, Attribute, Product, ProductAttrValue, SponsoredPlacement, SearchLog
+from app.models import (
+    User, Company, Category, Attribute, Product, ProductAttrValue,
+    SponsoredPlacement, SearchLog
+)
 from app.ranking.engine import recompute_category_scores
-from datetime import date, datetime, timedelta
+
 
 def seed():
-    """Seed the database with platform test data."""
-    app = create_app()
+    """Seed the database with the complete Noise Official product catalog."""
+    app = create_app(os.getenv('FLASK_CONFIG') or 'development')
     with app.app_context():
-        # Clear existing data
+        print("🌱 Seeding Weighted Ranking Engine database with Noise Official catalog...")
         db.drop_all()
         db.create_all()
-        
-        # 1. Create Super Admin (Platform Operator without tenant lock)
+
+        # -------------------------------------------------------------
+        # 1. Super Admin (Platform Operator without tenant lock)
+        # -------------------------------------------------------------
         superadmin = User(
             username='admin',
             email='admin@rankengine.io',
@@ -22,14 +29,14 @@ def seed():
         )
         superadmin.set_password('admin123')
         db.session.add(superadmin)
-        db.session.commit()
 
-        # 2. Create Tenant Company 1: Noise Official
-        company1 = Company(name='Noise Official')
+        # -------------------------------------------------------------
+        # 2. Tenant Company 1: Noise Official & Managers
+        # -------------------------------------------------------------
+        company1 = Company(company_id=1, name='Noise Official')
         db.session.add(company1)
-        db.session.commit()
-        
-        # Create company managers for Noise Official
+        db.session.flush()
+
         techmart_manager = User(
             username='techmart_admin',
             email='admin@techmart.com',
@@ -50,88 +57,181 @@ def seed():
         noise_manager.set_password('company123')
         db.session.add(noise_manager)
         db.session.commit()
-        
-        # 3. Noise Official Categories: Wireless Earbuds
-        earbuds = Category(name='Wireless Earbuds', company_id=company1.company_id)
-        db.session.add(earbuds)
-        db.session.commit()
-        
-        battery = Attribute(name='Battery Life (hours)', category_id=earbuds.category_id,
-                           data_type='numeric', min_value=0, max_value=40, weight=35.0, lower_is_better=False)
-        price = Attribute(name='Price (INR)', category_id=earbuds.category_id,
-                         data_type='numeric', min_value=500, max_value=15000, weight=35.0, lower_is_better=True)
-        rating = Attribute(name='Rating', category_id=earbuds.category_id,
-                          data_type='numeric', min_value=0, max_value=5, weight=15.0, lower_is_better=False)
-        anc = Attribute(name='Active Noise Cancelling', category_id=earbuds.category_id,
-                        data_type='binary', min_value=0.0, max_value=1.0, weight=15.0, lower_is_better=False)
-        db.session.add_all([battery, price, rating, anc])
-        db.session.commit()
-        
-        # Add products with initial search hits and binary anc values (1.0 = Yes, 0.0 = No)
-        earbuds_data = [
-            ('Sony WF-1000XM5', {'battery': 30, 'price': 12990, 'rating': 4.5, 'anc': 1.0}, 98),
-            ('boAt Airdopes 141', {'battery': 42, 'price': 999, 'rating': 3.8, 'anc': 0.0}, 142),
-            ('JBL Tune 230NC', {'battery': 28, 'price': 4999, 'rating': 4.2, 'anc': 1.0}, 54),
-            ('Samsung Galaxy Buds2 Pro', {'battery': 18, 'price': 11999, 'rating': 4.3, 'anc': 1.0}, 63),
-            ('OnePlus Nord Buds 2', {'battery': 36, 'price': 2799, 'rating': 4.0, 'anc': 1.0}, 41),
-            ('Apple AirPods Pro 2', {'battery': 30, 'price': 14900, 'rating': 4.7, 'anc': 1.0}, 115),
-            ('Realme Buds Air 5', {'battery': 38, 'price': 3499, 'rating': 3.9, 'anc': 1.0}, 32),
-        ]
-        
-        for name, values, hits in earbuds_data:
-            product = Product(name=name, category_id=earbuds.category_id, search_count=hits)
-            db.session.add(product)
+
+        # -------------------------------------------------------------
+        # 3. Create the 5 Official Categories for Noise Official
+        # Explicit Category IDs: 4 (Earbuds), 5 (Smartwatches), 6 (Neckbands), 7 (Headphones), 8 (Eyewear)
+        # -------------------------------------------------------------
+        category_configs = {
+            'Wireless Earbuds': {
+                'id': 4,
+                'display_attr_1': 'Battery Life (hours)',
+                'display_attr_2': 'Active Noise Cancelling',
+                'attrs': [
+                    {'name': 'Battery Life (hours)', 'data_type': 'numeric', 'min_value': 0.0, 'max_value': 100.0, 'weight': 35.0, 'lower_is_better': False},
+                    {'name': 'Price (INR)', 'data_type': 'numeric', 'min_value': 500.0, 'max_value': 15000.0, 'weight': 35.0, 'lower_is_better': True},
+                    {'name': 'Rating', 'data_type': 'numeric', 'min_value': 0.0, 'max_value': 5.0, 'weight': 15.0, 'lower_is_better': False},
+                    {'name': 'Active Noise Cancelling', 'data_type': 'binary', 'min_value': 0.0, 'max_value': 1.0, 'weight': 15.0, 'lower_is_better': False}
+                ]
+            },
+            'Smartwatches': {
+                'id': 5,
+                'display_attr_1': 'Battery Life (hours)',
+                'display_attr_2': 'Rating',
+                'attrs': [
+                    {'name': 'Battery Life (hours)', 'data_type': 'numeric', 'min_value': 0.0, 'max_value': 300.0, 'weight': 35.0, 'lower_is_better': False},
+                    {'name': 'Price (INR)', 'data_type': 'numeric', 'min_value': 1000.0, 'max_value': 15000.0, 'weight': 35.0, 'lower_is_better': True},
+                    {'name': 'Rating', 'data_type': 'numeric', 'min_value': 0.0, 'max_value': 5.0, 'weight': 30.0, 'lower_is_better': False}
+                ]
+            },
+            'Neckbands': {
+                'id': 6,
+                'display_attr_1': 'Battery Life (hours)',
+                'display_attr_2': 'Active Noise Cancelling',
+                'attrs': [
+                    {'name': 'Battery Life (hours)', 'data_type': 'numeric', 'min_value': 0.0, 'max_value': 120.0, 'weight': 35.0, 'lower_is_better': False},
+                    {'name': 'Price (INR)', 'data_type': 'numeric', 'min_value': 500.0, 'max_value': 10000.0, 'weight': 35.0, 'lower_is_better': True},
+                    {'name': 'Rating', 'data_type': 'numeric', 'min_value': 0.0, 'max_value': 5.0, 'weight': 15.0, 'lower_is_better': False},
+                    {'name': 'Active Noise Cancelling', 'data_type': 'binary', 'min_value': 0.0, 'max_value': 1.0, 'weight': 15.0, 'lower_is_better': False}
+                ]
+            },
+            'Headphones': {
+                'id': 7,
+                'display_attr_1': 'Battery Life (hours)',
+                'display_attr_2': 'Active Noise Cancelling',
+                'attrs': [
+                    {'name': 'Battery Life (hours)', 'data_type': 'numeric', 'min_value': 0.0, 'max_value': 100.0, 'weight': 35.0, 'lower_is_better': False},
+                    {'name': 'Price (INR)', 'data_type': 'numeric', 'min_value': 500.0, 'max_value': 15000.0, 'weight': 35.0, 'lower_is_better': True},
+                    {'name': 'Rating', 'data_type': 'numeric', 'min_value': 0.0, 'max_value': 5.0, 'weight': 15.0, 'lower_is_better': False},
+                    {'name': 'Active Noise Cancelling', 'data_type': 'binary', 'min_value': 0.0, 'max_value': 1.0, 'weight': 15.0, 'lower_is_better': False}
+                ]
+            },
+            'Smart Eyewear': {
+                'id': 8,
+                'display_attr_1': 'Battery Life (hours)',
+                'display_attr_2': 'Rating',
+                'attrs': [
+                    {'name': 'Battery Life (hours)', 'data_type': 'numeric', 'min_value': 0.0, 'max_value': 24.0, 'weight': 35.0, 'lower_is_better': False},
+                    {'name': 'Price (INR)', 'data_type': 'numeric', 'min_value': 1000.0, 'max_value': 15000.0, 'weight': 35.0, 'lower_is_better': True},
+                    {'name': 'Rating', 'data_type': 'numeric', 'min_value': 0.0, 'max_value': 5.0, 'weight': 30.0, 'lower_is_better': False}
+                ]
+            }
+        }
+
+        created_cats = {}
+        attr_objs = {}
+
+        for cat_name, conf in category_configs.items():
+            cat = Category(
+                category_id=conf['id'],
+                name=cat_name,
+                company_id=company1.company_id,
+                display_attr_1=conf.get('display_attr_1'),
+                display_attr_2=conf.get('display_attr_2')
+            )
+            db.session.add(cat)
             db.session.flush()
+            created_cats[cat_name] = cat
+
+            attr_objs[cat_name] = {}
+            for attr_def in conf['attrs']:
+                attr = Attribute(
+                    category_id=cat.category_id,
+                    name=attr_def['name'],
+                    data_type=attr_def['data_type'],
+                    min_value=attr_def['min_value'],
+                    max_value=attr_def['max_value'],
+                    weight=attr_def['weight'],
+                    lower_is_better=attr_def['lower_is_better']
+                )
+                db.session.add(attr)
+                db.session.flush()
+                attr_objs[cat_name][attr_def['name']] = attr
+
+        db.session.commit()
+
+        # -------------------------------------------------------------
+        # 4. Catalog Products (16 Noise products matching Storefront)
+        # -------------------------------------------------------------
+        products_data = [
+            # Smartwatches (Category ID 5)
+            {"name": "Noise ColorFit Ultra 3", "category": "Smartwatches", "price": 2999.0, "battery": 168.0, "rating": 4.5, "anc": 0.0, "hits": 184},
+            {"name": "NoiseFit Halo", "category": "Smartwatches", "price": 2499.0, "battery": 168.0, "rating": 4.4, "anc": 0.0, "hits": 142},
+            {"name": "Noise ColorFit Icon 2", "category": "Smartwatches", "price": 1499.0, "battery": 120.0, "rating": 4.2, "anc": 0.0, "hits": 289},
+            {"name": "Noise ColorFit Pro 4 Alpha", "category": "Smartwatches", "price": 3499.0, "battery": 168.0, "rating": 4.6, "anc": 0.0, "hits": 92},
+            {"name": "Noise Diva Smartwatch", "category": "Smartwatches", "price": 2999.0, "battery": 96.0, "rating": 4.4, "anc": 0.0, "hits": 64},
             
-            for attr, val in [(battery, values['battery']), (price, values['price']), (rating, values['rating']), (anc, values['anc'])]:
+            # Wireless Earbuds (Category ID 4)
+            {"name": "Noise Buds VS102", "category": "Wireless Earbuds", "price": 1099.0, "battery": 50.0, "rating": 4.1, "anc": 0.0, "hits": 352},
+            {"name": "Noise Buds VS404", "category": "Wireless Earbuds", "price": 1299.0, "battery": 45.0, "rating": 4.3, "anc": 0.0, "hits": 218},
+            {"name": "Noise Air Buds Pro 2 with ANC", "category": "Wireless Earbuds", "price": 2499.0, "battery": 40.0, "rating": 4.5, "anc": 1.0, "hits": 165},
+            {"name": "Noise Buds Combat", "category": "Wireless Earbuds", "price": 1399.0, "battery": 45.0, "rating": 4.2, "anc": 0.0, "hits": 112},
+            {"name": "Noise Buds VS201 V2", "category": "Wireless Earbuds", "price": 1199.0, "battery": 36.0, "rating": 4.0, "anc": 0.0, "hits": 189},
+            {"name": "Noise Master Buds", "category": "Wireless Earbuds", "price": 3999.0, "battery": 48.0, "rating": 4.7, "anc": 1.0, "hits": 78},
+            {"name": "Noise Pure Pods", "category": "Wireless Earbuds", "price": 2999.0, "battery": 80.0, "rating": 4.3, "anc": 0.0, "hits": 86},
+
+            # Neckbands (Category ID 6)
+            {"name": "Noise Tune Charge", "category": "Neckbands", "price": 999.0, "battery": 35.0, "rating": 4.2, "anc": 0.0, "hits": 274},
+            {"name": "Noise Flair XL", "category": "Neckbands", "price": 1299.0, "battery": 80.0, "rating": 4.4, "anc": 0.0, "hits": 139},
+
+            # Headphones (Category ID 7)
+            {"name": "Noise Two Wireless Headphones", "category": "Headphones", "price": 1799.0, "battery": 50.0, "rating": 4.2, "anc": 0.0, "hits": 69},
+
+            # Smart Eyewear (Category ID 8)
+            {"name": "Noise i1 Smart Glasses", "category": "Smart Eyewear", "price": 4999.0, "battery": 9.0, "rating": 4.1, "anc": 0.0, "hits": 42}
+        ]
+
+        air_buds_pro_product = None
+
+        for p_data in products_data:
+            cat_name = p_data['category']
+            cat = created_cats[cat_name]
+
+            prod = Product(
+                name=p_data['name'],
+                category_id=cat.category_id,
+                search_count=p_data['hits']
+            )
+            db.session.add(prod)
+            db.session.flush()
+
+            if prod.name == "Noise Air Buds Pro 2 with ANC":
+                air_buds_pro_product = prod
+
+            cat_attrs = attr_objs[cat_name]
+            for attr_name, attr_model in cat_attrs.items():
+                if attr_name == 'Battery Life (hours)':
+                    val = p_data['battery']
+                elif attr_name == 'Price (INR)':
+                    val = p_data['price']
+                elif attr_name == 'Rating':
+                    val = p_data['rating']
+                elif attr_name == 'Active Noise Cancelling':
+                    val = p_data['anc']
+                else:
+                    val = 0.0
+
                 pav = ProductAttrValue(
-                    product_id=product.product_id,
-                    attribute_id=attr.attribute_id,
+                    product_id=prod.product_id,
+                    attribute_id=attr_model.attribute_id,
                     raw_value=val
                 )
                 db.session.add(pav)
-        
-        db.session.commit()
-        recompute_category_scores(earbuds.category_id, db.session, Product, Attribute, ProductAttrValue)
-        
-        # Noise Official Category: Budget Laptops
-        laptops = Category(name='Budget Laptops', company_id=company1.company_id)
-        db.session.add(laptops)
-        db.session.commit()
-        
-        perf = Attribute(name='Performance Score', category_id=laptops.category_id,
-                        min_value=0, max_value=100, weight=40.0)
-        lap_price = Attribute(name='Price (INR)', category_id=laptops.category_id,
-                             min_value=20000, max_value=80000, weight=35.0, lower_is_better=True)
-        display = Attribute(name='Display Quality', category_id=laptops.category_id,
-                           min_value=0, max_value=10, weight=25.0)
-        db.session.add_all([perf, lap_price, display])
-        db.session.commit()
-        
-        laptop_data = [
-            ('HP Pavilion 15', {'perf': 72, 'price': 52990, 'display': 7.5}, 76),
-            ('Lenovo IdeaPad 3', {'perf': 65, 'price': 35990, 'display': 6.8}, 58),
-            ('Acer Aspire 5', {'perf': 70, 'price': 42990, 'display': 7.2}, 39),
-            ('ASUS VivoBook 15', {'perf': 68, 'price': 39990, 'display': 7.0}, 44),
-            ('Dell Inspiron 15', {'perf': 75, 'price': 55990, 'display': 8.0}, 85),
-        ]
-        
-        for name, values, hits in laptop_data:
-            product = Product(name=name, category_id=laptops.category_id, search_count=hits)
-            db.session.add(product)
-            db.session.flush()
-            for attr, val in [(perf, values['perf']), (lap_price, values['price']), (display, values['display'])]:
-                pav = ProductAttrValue(product_id=product.product_id, attribute_id=attr.attribute_id, raw_value=val)
-                db.session.add(pav)
-        
-        db.session.commit()
-        recompute_category_scores(laptops.category_id, db.session, Product, Attribute, ProductAttrValue)
 
-        # 4. Sponsored Placement (Anti-bias capped at slot 1)
-        boat = Product.query.filter_by(name='boAt Airdopes 141').first()
-        if boat:
+        db.session.commit()
+
+        # -------------------------------------------------------------
+        # 5. Recompute composite scores for all categories
+        # -------------------------------------------------------------
+        for cat_name, cat in created_cats.items():
+            recompute_category_scores(cat.category_id, db.session, Product, Attribute, ProductAttrValue)
+
+        # -------------------------------------------------------------
+        # 6. Add active sponsored placement for Noise Air Buds Pro 2 with ANC
+        # -------------------------------------------------------------
+        if air_buds_pro_product:
             sp = SponsoredPlacement(
-                product_id=boat.product_id,
+                product_id=air_buds_pro_product.product_id,
                 slot_position=1,
                 start_date=date.today(),
                 end_date=date.today() + timedelta(days=30),
@@ -140,31 +240,34 @@ def seed():
             db.session.add(sp)
             db.session.commit()
 
-        # 5. Seed Search Analytics Logs
-        demo_queries = [
-            ('noise cancelling earbuds', earbuds.category_id, 4),
-            ('boAt Airdopes', earbuds.category_id, 1),
-            ('budget student laptop', laptops.category_id, 3),
-            ('Sony audio', earbuds.category_id, 1),
-            ('Dell Inspiron', laptops.category_id, 1),
-            ('AirPods Pro', earbuds.category_id, 1),
-            ('lightweight laptops under 50k', laptops.category_id, 2),
+        # -------------------------------------------------------------
+        # 7. Add seed search logs for insights
+        # -------------------------------------------------------------
+        search_queries = [
+            ("ear phones", created_cats['Wireless Earbuds'].category_id, 7),
+            ("earbuds", created_cats['Wireless Earbuds'].category_id, 7),
+            ("smart watch", created_cats['Smartwatches'].category_id, 5),
+            ("anc earbuds", created_cats['Wireless Earbuds'].category_id, 2),
+            ("noise smart watch", created_cats['Smartwatches'].category_id, 5),
+            ("wireless neckband", created_cats['Neckbands'].category_id, 2),
+            ("noise headphones", created_cats['Headphones'].category_id, 1),
+            ("smart glasses", created_cats['Smart Eyewear'].category_id, 1)
         ]
-        for query_text, cat_id, res_count in demo_queries:
-            log_item = SearchLog(
-                query_text=query_text,
-                category_id=cat_id,
-                results_count=res_count,
-                searched_at=datetime.utcnow() - timedelta(minutes=15)
+        for q_text, cid, r_cnt in search_queries:
+            slog = SearchLog(
+                query_text=q_text,
+                category_id=cid,
+                results_count=r_cnt,
+                searched_at=datetime.now(timezone.utc) - timedelta(minutes=10)
             )
-            db.session.add(log_item)
+            db.session.add(slog)
         db.session.commit()
-        
-        print('✅ Database seeded successfully!')
-        print('   Platform Superadmin: admin / admin123 (Full Tenant Management & Inspection)')
-        print(f'   Tenant 1: {company1.name} (Managers: noise_admin, techmart_admin / company123)')
-        print('   Categories: Wireless Earbuds (7), Budget Laptops (5)')
-        print('   Search Analytics: 7 query logs, populated hit counters')
+
+        print("✅ Database seeded successfully with 16 Noise products across 5 categories!")
+        print("   Platform Superadmin : admin / admin123")
+        print("   Tenant ('Noise Official'): techmart_admin / company123, noise_admin / company123")
+        print("   Categories: Wireless Earbuds (7), Smartwatches (5), Neckbands (2), Headphones (1), Smart Eyewear (1)")
+
 
 if __name__ == '__main__':
     seed()
