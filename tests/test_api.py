@@ -783,6 +783,58 @@ def test_api_search_fallback_display_badges(client, app):
         assert 'HDR Support' in badge_names
 
 
+def test_api_product_image_url(client, app):
+    """Test image_url support in search, get_product, and update_product."""
+    with app.app_context():
+        co = Company(name='Image Test Co')
+        db.session.add(co)
+        db.session.commit()
+
+        cat = Category(name='Gadgets', company_id=co.company_id)
+        db.session.add(cat)
+        db.session.commit()
+
+        attr = Attribute(category_id=cat.category_id, name='Rating', min_value=1.0, max_value=5.0, weight=100.0)
+        db.session.add(attr)
+        db.session.commit()
+
+        test_img = "https://example.com/gadget.png"
+        p = Product(name='Cool Gadget', category_id=cat.category_id, composite_score=0.9, image_url=test_img)
+        db.session.add(p)
+        db.session.commit()
+
+        pav = ProductAttrValue(product_id=p.product_id, attribute_id=attr.attribute_id, raw_value=4.5)
+        db.session.add(pav)
+        db.session.commit()
+
+        # 1. Search returns image_url
+        res = client.get(f'/api/v1/search?company_id={co.company_id}&category_id={cat.category_id}')
+        assert res.status_code == 200
+        data = res.get_json()
+        assert len(data['results']) == 1
+        assert data['results'][0]['image_url'] == test_img
+
+        # 2. Get product returns image_url
+        res2 = client.get(f'/api/v1/product/{p.product_id}?company_id={co.company_id}')
+        assert res2.status_code == 200
+        data2 = res2.get_json()
+        assert data2['image_url'] == test_img
+
+        # 3. Update product updates image_url
+        new_img = "https://example.com/updated_gadget.png"
+        res3 = client.put(
+            f'/api/v1/product/{p.product_id}?company_id={co.company_id}',
+            json={'image_url': new_img}
+        )
+        assert res3.status_code == 200
+        data3 = res3.get_json()
+        assert data3['image_url'] == new_img
+
+        # Verify persisted
+        db.session.refresh(p)
+        assert p.image_url == new_img
+
+
 
 
 

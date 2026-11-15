@@ -527,11 +527,12 @@ def new_product(category_id):
     
     if request.method == 'POST':
         name = request.form.get('product_name')
+        image_url = request.form.get('image_url')
         if not name:
             flash('Product name is required.', 'danger')
             return render_template('admin/product_form.html', category=category, attributes=attributes)
         
-        product = Product(name=name, category_id=category_id)
+        product = Product(name=name, category_id=category_id, image_url=image_url)
         db.session.add(product)
         db.session.flush()  # Get product_id before adding values
         
@@ -614,6 +615,7 @@ def edit_product(product_id):
     
     if request.method == 'POST':
         product.name = request.form.get('product_name', product.name)
+        product.image_url = request.form.get('image_url', product.image_url)
         
         for attr in attributes:
             raw_value = request.form.get(f'attr_{attr.attribute_id}')

@@ -93,6 +93,7 @@ class Product(db.Model):
     product_id = db.Column(db.Integer, primary_key=True)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.category_id'), index=True)
     name = db.Column(db.String(200), nullable=False)
+    image_url = db.Column(db.String(500), nullable=True)
     composite_score = db.Column(db.Float, default=0.0)
     search_count = db.Column(db.Integer, default=0)
     is_sponsored = db.Column(db.Boolean, default=False)

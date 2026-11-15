@@ -513,6 +513,7 @@ def search_products():
             'rank': rank_idx,
             'product_id': prod.product_id,
             'name': prod.name,
+            'image_url': prod.image_url,
             'category_id': prod.category_id,
             'category_name': prod_cat.name if prod_cat else None,
             'composite_score': prod.composite_score,
@@ -629,6 +630,7 @@ def get_product(product_id):
         'status': 'success',
         'product_id': product.product_id,
         'name': product.name,
+        'image_url': product.image_url,
         'company_id': company.company_id,
         'company_name': company.name,
         'category_id': category.category_id,
@@ -685,6 +687,10 @@ def update_product(product_id):
         new_name = str(req_data['name']).strip()
         if new_name:
             product.name = new_name
+
+    # Update product image_url if provided
+    if 'image_url' in req_data:
+        product.image_url = req_data.get('image_url', product.image_url)
 
     category_attrs = Attribute.query.filter_by(category_id=product.category_id).all()
     updates = {}
@@ -783,6 +789,7 @@ def update_product(product_id):
         'message': 'Product updated and re-ranked successfully',
         'product_id': product.product_id,
         'name': product.name,
+        'image_url': product.image_url,
         'category_id': product.category_id,
         'composite_score': product.composite_score,
         'score_pct': format_score_display(product.composite_score or 0.0)

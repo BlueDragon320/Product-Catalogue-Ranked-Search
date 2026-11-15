@@ -155,30 +155,174 @@ def seed():
         # -------------------------------------------------------------
         products_data = [
             # Smartwatches (Category ID 5)
-            {"name": "Noise ColorFit Ultra 3", "category": "Smartwatches", "price": 2999.0, "battery": 168.0, "rating": 4.5, "anc": 0.0, "hits": 184},
-            {"name": "NoiseFit Halo", "category": "Smartwatches", "price": 2499.0, "battery": 168.0, "rating": 4.4, "anc": 0.0, "hits": 142},
-            {"name": "Noise ColorFit Icon 2", "category": "Smartwatches", "price": 1499.0, "battery": 120.0, "rating": 4.2, "anc": 0.0, "hits": 289},
-            {"name": "Noise ColorFit Pro 4 Alpha", "category": "Smartwatches", "price": 3499.0, "battery": 168.0, "rating": 4.6, "anc": 0.0, "hits": 92},
-            {"name": "Noise Diva Smartwatch", "category": "Smartwatches", "price": 2999.0, "battery": 96.0, "rating": 4.4, "anc": 0.0, "hits": 64},
+            {
+                "name": "Noise ColorFit Ultra 3",
+                "category": "Smartwatches",
+                "price": 2999.0,
+                "battery": 168.0,
+                "rating": 4.5,
+                "anc": 0.0,
+                "hits": 184,
+                "image_url": "https://www.gonoise.com/cdn/shop/files/NoiseColorFitUltra3-BlackEliteEdition_1_grande.png?v=1695122129"
+            },
+            {
+                "name": "NoiseFit Halo",
+                "category": "Smartwatches",
+                "price": 2499.0,
+                "battery": 168.0,
+                "rating": 4.4,
+                "anc": 0.0,
+                "hits": 142,
+                "image_url": "https://www.gonoise.com/cdn/shop/files/1_1_b18f77db-5fef-4698-9902-a48fec2b8efa_grande.png?v=1704963291"
+            },
+            {
+                "name": "Noise ColorFit Icon 2",
+                "category": "Smartwatches",
+                "price": 1499.0,
+                "battery": 120.0,
+                "rating": 4.2,
+                "anc": 0.0,
+                "hits": 289,
+                "image_url": "https://www.gonoise.com/cdn/shop/products/Icon2-5_grande.png?v=1681610912"
+            },
+            {
+                "name": "Noise ColorFit Pro 4 Alpha",
+                "category": "Smartwatches",
+                "price": 3499.0,
+                "battery": 168.0,
+                "rating": 4.6,
+                "anc": 0.0,
+                "hits": 92,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/products/1_0ba84c50-3527-4c98-b643-f3f4f3075c27.png?v=1686911647"
+            },
+            {
+                "name": "Noise Diva Smartwatch",
+                "category": "Smartwatches",
+                "price": 2999.0,
+                "battery": 96.0,
+                "rating": 4.4,
+                "anc": 0.0,
+                "hits": 64,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/files/Artboard19_result_5250da54-389e-4afa-a440-870f0bae2459.webp?v=1776673795"
+            },
             
             # Wireless Earbuds (Category ID 4)
-            {"name": "Noise Buds VS102", "category": "Wireless Earbuds", "price": 1099.0, "battery": 50.0, "rating": 4.1, "anc": 0.0, "hits": 352},
-            {"name": "Noise Buds VS404", "category": "Wireless Earbuds", "price": 1299.0, "battery": 45.0, "rating": 4.3, "anc": 0.0, "hits": 218},
-            {"name": "Noise Air Buds Pro 2 with ANC", "category": "Wireless Earbuds", "price": 2499.0, "battery": 40.0, "rating": 4.5, "anc": 1.0, "hits": 165},
-            {"name": "Noise Buds Combat", "category": "Wireless Earbuds", "price": 1399.0, "battery": 45.0, "rating": 4.2, "anc": 0.0, "hits": 112},
-            {"name": "Noise Buds VS201 V2", "category": "Wireless Earbuds", "price": 1199.0, "battery": 36.0, "rating": 4.0, "anc": 0.0, "hits": 189},
-            {"name": "Noise Master Buds", "category": "Wireless Earbuds", "price": 3999.0, "battery": 48.0, "rating": 4.7, "anc": 1.0, "hits": 78},
-            {"name": "Noise Pure Pods", "category": "Wireless Earbuds", "price": 2999.0, "battery": 80.0, "rating": 4.3, "anc": 0.0, "hits": 86},
+            {
+                "name": "Noise Buds VS102",
+                "category": "Wireless Earbuds",
+                "price": 1099.0,
+                "battery": 50.0,
+                "rating": 4.1,
+                "anc": 0.0,
+                "hits": 352,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/files/1_9e839f18-7b82-4b71-ab98-471982ca91ef.png?v=1682439948"
+            },
+            {
+                "name": "Noise Buds VS404",
+                "category": "Wireless Earbuds",
+                "price": 1299.0,
+                "battery": 45.0,
+                "rating": 4.3,
+                "anc": 0.0,
+                "hits": 218,
+                "image_url": "https://www.gonoise.com/cdn/shop/files/image_2023_09_19T10_11_28_596Z_grande.png?v=1695119844"
+            },
+            {
+                "name": "Noise Air Buds Pro 2 with ANC",
+                "category": "Wireless Earbuds",
+                "price": 2499.0,
+                "battery": 40.0,
+                "rating": 4.5,
+                "anc": 1.0,
+                "hits": 165,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/files/3.74_copy_result.webp?v=1744177541"
+            },
+            {
+                "name": "Noise Buds Combat",
+                "category": "Wireless Earbuds",
+                "price": 1399.0,
+                "battery": 45.0,
+                "rating": 4.2,
+                "anc": 0.0,
+                "hits": 112,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/products/Black-Combat-Carousel-500x500-1.png?v=1673874381"
+            },
+            {
+                "name": "Noise Buds VS201 V2",
+                "category": "Wireless Earbuds",
+                "price": 1199.0,
+                "battery": 36.0,
+                "rating": 4.0,
+                "anc": 0.0,
+                "hits": 189,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/products/b3.png?v=1627585394"
+            },
+            {
+                "name": "Noise Master Buds",
+                "category": "Wireless Earbuds",
+                "price": 3999.0,
+                "battery": 48.0,
+                "rating": 4.7,
+                "anc": 1.0,
+                "hits": 78,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/files/Artboard9_result_e8b91d73-7a1a-4375-a0ce-f6a825fad7e2.webp?v=1773898750"
+            },
+            {
+                "name": "Noise Pure Pods",
+                "category": "Wireless Earbuds",
+                "price": 2999.0,
+                "battery": 80.0,
+                "rating": 4.3,
+                "anc": 0.0,
+                "hits": 86,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/files/5_78ab6c3d-0bf3-495b-9580-c640e5cf459d.webp?v=1720444316"
+            },
 
             # Neckbands (Category ID 6)
-            {"name": "Noise Tune Charge", "category": "Neckbands", "price": 999.0, "battery": 35.0, "rating": 4.2, "anc": 0.0, "hits": 274},
-            {"name": "Noise Flair XL", "category": "Neckbands", "price": 1299.0, "battery": 80.0, "rating": 4.4, "anc": 0.0, "hits": 139},
+            {
+                "name": "Noise Tune Charge",
+                "category": "Neckbands",
+                "price": 999.0,
+                "battery": 35.0,
+                "rating": 4.2,
+                "anc": 0.0,
+                "hits": 274,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/products/Artboard1_f25c5842-36c2-4588-a9b3-f6482b5e28c1.png?v=1627585694"
+            },
+            {
+                "name": "Noise Flair XL",
+                "category": "Neckbands",
+                "price": 1299.0,
+                "battery": 80.0,
+                "rating": 4.4,
+                "anc": 0.0,
+                "hits": 139,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/products/2.1699.png?v=1656585389"
+            },
 
             # Headphones (Category ID 7)
-            {"name": "Noise Two Wireless Headphones", "category": "Headphones", "price": 1799.0, "battery": 50.0, "rating": 4.2, "anc": 0.0, "hits": 69},
+            {
+                "name": "Noise Two Wireless Headphones",
+                "category": "Headphones",
+                "price": 1799.0,
+                "battery": 50.0,
+                "rating": 4.2,
+                "anc": 0.0,
+                "hits": 69,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/files/1_3941f406-f4ff-4692-8ef4-6719497a0f56.webp?v=1720759157"
+            },
 
             # Smart Eyewear (Category ID 8)
-            {"name": "Noise i1 Smart Glasses", "category": "Smart Eyewear", "price": 4999.0, "battery": 9.0, "rating": 4.1, "anc": 0.0, "hits": 42}
+            {
+                "name": "Noise i1 Smart Glasses",
+                "category": "Smart Eyewear",
+                "price": 4999.0,
+                "battery": 9.0,
+                "rating": 4.1,
+                "anc": 0.0,
+                "hits": 42,
+                "image_url": "https://cdn.shopify.com/s/files/1/0997/6284/products/S1_57e9472f-ddeb-4b8d-b74c-2ef1bf551ab1.png?v=1682400943"
+            }
         ]
 
         air_buds_pro_product = None
@@ -190,7 +334,8 @@ def seed():
             prod = Product(
                 name=p_data['name'],
                 category_id=cat.category_id,
-                search_count=p_data['hits']
+                search_count=p_data['hits'],
+                image_url=p_data.get('image_url')
             )
             db.session.add(prod)
             db.session.flush()

@@ -33,6 +33,19 @@
                            value="{{ product.name if product else '' }}" required autofocus>
                     <small class="text-muted">The commercial name of the item displayed on search rankings.</small>
                 </div>
+                <div class="form-group mb-3">
+                    <label for="image_url" class="font-bold">Product Image URL</label>
+                    <input type="url" name="image_url" id="image_url" class="form-control font-mono text-sm" 
+                           placeholder="https://example.com/image.png" 
+                           value="{{ product.image_url if product and product.image_url else '' }}">
+                    <small class="text-muted">Direct HTTPS image link to display for this product.</small>
+                    {% if product and product.image_url %}
+                    <div class="mt-2 d-flex align-items-center gap-2 p-2 bg-paper border-hairline rounded">
+                        <img src="{{ product.image_url }}" alt="Preview" style="height: 48px; width: 48px; object-fit: contain; border-radius: 4px; background: #fff;" onerror="this.style.display='none'">
+                        <span class="text-xs text-muted font-mono">Current Image Preview</span>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
 
             <!-- Dynamic Attribute Inputs -->
