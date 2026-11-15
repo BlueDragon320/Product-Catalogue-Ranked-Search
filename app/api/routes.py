@@ -784,6 +784,16 @@ def update_product(product_id):
     db.session.commit()
     db.session.refresh(product)
 
+    # Sync to storefront
+    try:
+        from app.admin.routes import sync_product_to_storefront
+        cat_name = product.category.name if product.category else None
+        price_attr = next((a for a in category_attrs if 'price' in a.name.lower()), None)
+        sync_price = updates.get(price_attr) if price_attr else None
+        sync_product_to_storefront(product.product_id, product.name, cat_name, sync_price, product.image_url)
+    except Exception:
+        pass
+
     return jsonify({
         'status': 'success',
         'message': 'Product updated and re-ranked successfully',

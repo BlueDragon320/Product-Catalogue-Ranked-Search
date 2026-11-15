@@ -518,6 +518,75 @@ def list_products(category_id):
         format_score=format_score_display
     )
 
+def sync_product_to_storefront(product_id, name, category_name, price, image_url):
+    """
+    Directly synchronizes product updates/creations to storefront SQLite database(s).
+    """
+    import os
+    import re
+    import sqlite3
+    import logging
+
+    candidate_db_paths = [
+        os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'e-commerce-website', 'instance', 'noise_ecommerce.db')),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'ECommerce-Site', 'instance', 'noise_ecommerce.db')),
+        '/home/blue/mini-pjct/e-commerce-website/instance/noise_ecommerce.db',
+        '/home/blue/Collage-Mini-Project/e-commerce-website/instance/noise_ecommerce.db',
+        '/home/blue/MiniProject/ECommerce-Site/instance/noise_ecommerce.db'
+    ]
+
+    seen = set()
+    db_paths = []
+    for p in candidate_db_paths:
+        if p and p not in seen and os.path.exists(p):
+            seen.add(p)
+            db_paths.append(p)
+
+    for db_path in db_paths:
+        try:
+            conn = sqlite3.connect(db_path, timeout=5.0)
+            cur = conn.cursor()
+
+            # Check if product exists by id or name
+            cur.execute(
+                "SELECT id, slug FROM products WHERE id = ? OR LOWER(name) = LOWER(?)",
+                (product_id, name.strip() if name else "")
+            )
+            row = cur.fetchone()
+
+            if row:
+                existing_id = row[0]
+                cur.execute(
+                    "UPDATE products SET image_url = ?, price = COALESCE(?, price), name = ? WHERE id = ?",
+                    (image_url, price, name, existing_id)
+                )
+            else:
+                base_slug = re.sub(r'[^a-z0-9]+', '-', (name or f'product-{product_id}').lower()).strip('-')
+                if not base_slug:
+                    base_slug = f"product-{product_id}"
+                slug = base_slug
+
+                # Ensure slug uniqueness in this database
+                cur.execute("SELECT id FROM products WHERE slug = ?", (slug,))
+                slug_row = cur.fetchone()
+                if slug_row and slug_row[0] != product_id:
+                    slug = f"{base_slug}-{product_id}"
+
+                description = f"{name} - {category_name}" if category_name else name
+                insert_price = price if price is not None else 1999.0
+                cur.execute(
+                    """INSERT INTO products 
+                    (id, name, slug, category, price, image_url, description, rating, review_count, in_stock, is_featured, is_sponsored, created_at) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 4.2, 100, 1, 0, 0, datetime('now'))""",
+                    (product_id, name, slug, category_name or 'Electronics', insert_price, image_url, description)
+                )
+
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            logging.warning(f"Error syncing product {product_id} to storefront db at {db_path}: {e}")
+
+
 @admin.route('/category/<int:category_id>/product/new', methods=['GET', 'POST'])
 @company_required
 def new_product(category_id):
@@ -536,11 +605,21 @@ def new_product(category_id):
         db.session.add(product)
         db.session.flush()  # Get product_id before adding values
         
+        price_val = None
         # Save attribute values
         for attr in attributes:
             raw_value = request.form.get(f'attr_{attr.attribute_id}')
             is_rating = (attr.name.strip().lower() == 'rating')
             is_price = ('price' in attr.name.strip().lower())
+
+            if is_price:
+                if raw_value is not None and str(raw_value).strip() != '':
+                    try:
+                        price_val = float(raw_value)
+                    except ValueError:
+                        pass
+                else:
+                    price_val = 1999.0 if (attr.min_value is None or attr.min_value <= 1999.0) else attr.min_value
 
             if is_rating and (raw_value is None or (isinstance(raw_value, str) and raw_value.strip() == '')):
                 raw_val = 4.0 if (attr.min_value is not None and attr.max_value is not None and attr.min_value <= 4.0 <= attr.max_value) else (attr.min_value if attr.min_value is not None else 4.0)
@@ -588,6 +667,24 @@ def new_product(category_id):
         
         db.session.commit()
         
+        # Direct sync to storefront database
+        try:
+            if price_val is None:
+                for pav in ProductAttrValue.query.filter_by(product_id=product.product_id).all():
+                    attr_obj = db.session.get(Attribute, pav.attribute_id)
+                    if attr_obj and 'price' in attr_obj.name.strip().lower() and pav.raw_value is not None:
+                        price_val = pav.raw_value
+                        break
+            sync_product_to_storefront(
+                product_id=product.product_id,
+                name=product.name,
+                category_name=category.name,
+                price=price_val,
+                image_url=product.image_url
+            )
+        except Exception:
+            pass
+
         # Trigger recomputation (FR-11)
         try:
             from app.ranking.engine import recompute_category_scores
@@ -616,11 +713,21 @@ def edit_product(product_id):
     if request.method == 'POST':
         product.name = request.form.get('product_name', product.name)
         product.image_url = request.form.get('image_url', product.image_url)
+        price_val = None
         
         for attr in attributes:
             raw_value = request.form.get(f'attr_{attr.attribute_id}')
             is_rating = (attr.name.strip().lower() == 'rating')
             is_price = ('price' in attr.name.strip().lower())
+
+            if is_price:
+                if raw_value is not None and str(raw_value).strip() != '':
+                    try:
+                        price_val = float(raw_value)
+                    except ValueError:
+                        pass
+                else:
+                    price_val = 1999.0 if (attr.min_value is None or attr.min_value <= 1999.0) else attr.min_value
 
             if is_rating and (raw_value is None or (isinstance(raw_value, str) and raw_value.strip() == '')):
                 raw_val = 4.0 if (attr.min_value is not None and attr.max_value is not None and attr.min_value <= 4.0 <= attr.max_value) else (attr.min_value if attr.min_value is not None else 4.0)
@@ -679,6 +786,24 @@ def edit_product(product_id):
         product.updated_at = datetime.now(timezone.utc)
         db.session.commit()
         
+        # Direct sync to storefront database
+        try:
+            if price_val is None:
+                for pav in ProductAttrValue.query.filter_by(product_id=product.product_id).all():
+                    attr_obj = db.session.get(Attribute, pav.attribute_id)
+                    if attr_obj and 'price' in attr_obj.name.strip().lower() and pav.raw_value is not None:
+                        price_val = pav.raw_value
+                        break
+            sync_product_to_storefront(
+                product_id=product.product_id,
+                name=product.name,
+                category_name=category.name,
+                price=price_val,
+                image_url=product.image_url
+            )
+        except Exception:
+            pass
+
         # Trigger recomputation (FR-11)
         try:
             from app.ranking.engine import recompute_category_scores

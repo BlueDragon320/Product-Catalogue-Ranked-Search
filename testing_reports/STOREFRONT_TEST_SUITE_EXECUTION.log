@@ -1,0 +1,51 @@
+/home/blue/.local/lib/python3.14/site-packages/pytest_asyncio/plugin.py:299: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the "fixture" caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to "function" scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts ==============================
+platform linux -- Python 3.14.10, pytest-9.2.0, pluggy-1.7.0 -- /usr/bin/python
+cachedir: .pytest_cache
+rootdir: /home/blue/MiniProject/ECommerce-Site
+plugins: anyio-4.15.1, playwright-0.10.0, asyncio-1.4.0, platformdirs-4.14.5
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 37 items
+
+tests/test_admin.py::test_admin_auth_required PASSED                     [  2%]
+tests/test_admin.py::test_admin_login_logout_flow PASSED                 [  5%]
+tests/test_admin.py::test_admin_dashboard PASSED                         [  8%]
+tests/test_admin.py::test_admin_products_list PASSED                     [ 10%]
+tests/test_admin.py::test_admin_product_crud PASSED                      [ 13%]
+tests/test_admin.py::test_admin_ranking_engine_page PASSED               [ 16%]
+tests/test_admin.py::test_admin_ranking_engine_product_names_and_rankings PASSED [ 18%]
+tests/test_admin.py::test_admin_products_renders_engine_rank_metadata PASSED [ 21%]
+tests/test_admin.py::test_admin_api_engine_status PASSED                 [ 24%]
+tests/test_admin.py::test_admin_toggle_sponsored PASSED                  [ 27%]
+tests/test_admin.py::test_admin_product_rating_conversion PASSED         [ 29%]
+tests/test_engine_client.py::test_engine_client_init PASSED              [ 32%]
+tests/test_engine_client.py::test_health_check_online PASSED             [ 35%]
+tests/test_engine_client.py::test_health_check_offline PASSED            [ 37%]
+tests/test_engine_client.py::test_get_categories_online PASSED           [ 40%]
+tests/test_engine_client.py::test_get_categories_offline_fallback PASSED [ 43%]
+tests/test_engine_client.py::test_search_offline_fallback PASSED         [ 45%]
+tests/test_engine_client.py::test_search_with_custom_weights PASSED      [ 48%]
+tests/test_engine_client.py::test_product_breakdown_fallback PASSED      [ 51%]
+tests/test_engine_client.py::test_live_engine_health_and_company PASSED  [ 54%]
+tests/test_engine_client.py::test_live_engine_categories_noise PASSED    [ 56%]
+tests/test_engine_client.py::test_live_engine_search_noise_products PASSED [ 59%]
+tests/test_engine_client.py::test_live_engine_category_filtering PASSED  [ 62%]
+tests/test_storefront.py::test_homepage PASSED                           [ 64%]
+tests/test_storefront.py::test_shop_page PASSED                          [ 67%]
+tests/test_storefront.py::test_product_detail PASSED                     [ 70%]
+tests/test_storefront.py::test_smart_rank_api PASSED                     [ 72%]
+tests/test_storefront.py::test_cart_operations PASSED                    [ 75%]
+tests/test_storefront.py::test_checkout_flow PASSED                      [ 78%]
+tests/test_storefront.py::test_checkout_out_of_stock_rejected PASSED     [ 81%]
+tests/test_storefront.py::test_search_synonyms_ear_phones PASSED         [ 83%]
+tests/test_storefront.py::test_search_synonyms_ear_pods PASSED           [ 86%]
+tests/test_storefront.py::test_search_headphones_whitespace_and_typos PASSED [ 89%]
+tests/test_storefront.py::test_search_typo_tolerance_and_whitespace PASSED [ 91%]
+tests/test_storefront.py::test_sorting_strategies PASSED                 [ 94%]
+tests/test_storefront.py::test_sponsored_pinned_at_rank_one PASSED       [ 97%]
+tests/test_storefront.py::test_storefront_hides_dynamic_weights PASSED   [100%]
+
+============================== 37 passed in 2.81s ==============================

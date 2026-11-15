@@ -1,12 +1,11 @@
-================================================================================
-  PRODUCT CATALOGUE RANKED SEARCH & NOISE STOREFRONT — API TEST SUITE LOG
-================================================================================
+/home/blue/.local/lib/python3.14/site-packages/pytest_asyncio/plugin.py:299: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the "fixture" caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to "function" scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
 
->>> [SUITE 1: Ranking Engine REST API (Product-Catalogue-Ranked-Search)]
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
 ============================= test session starts ==============================
-platform linux -- Python 3.14.10, pytest-9.2.0, pluggy-1.7.0 -- /usr/bin/python3
+platform linux -- Python 3.14.10, pytest-9.2.0, pluggy-1.7.0 -- /usr/bin/python
 cachedir: .pytest_cache
-rootdir: /home/blue/mini-pjct/Product-Catalogue-Ranked-Search
+rootdir: /home/blue/MiniProject/weighted-ranking-engine
 plugins: anyio-4.15.1, playwright-0.10.0, asyncio-1.4.0, platformdirs-4.14.5
 asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
 collecting ... collected 22 items
@@ -34,29 +33,4 @@ tests/test_api.py::test_api_get_categories_display_attributes PASSED     [ 90%]
 tests/test_api.py::test_api_search_display_attributes_and_badges PASSED  [ 95%]
 tests/test_api.py::test_api_search_fallback_display_badges PASSED        [100%]
 
-============================== 22 passed in 0.97s ==============================
-
-
->>> [SUITE 2: Storefront Engine API Client & Offline Fallback (e-commerce-website)]
-============================= test session starts ==============================
-platform linux -- Python 3.14.10, pytest-9.2.0, pluggy-1.7.0 -- /usr/bin/python3
-cachedir: .pytest_cache
-rootdir: /home/blue/mini-pjct/e-commerce-website
-plugins: anyio-4.15.1, playwright-0.10.0, asyncio-1.4.0, platformdirs-4.14.5
-asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collecting ... collected 12 items
-
-tests/test_engine_client.py::test_engine_client_init PASSED              [  8%]
-tests/test_engine_client.py::test_health_check_online PASSED             [ 16%]
-tests/test_engine_client.py::test_health_check_offline PASSED            [ 25%]
-tests/test_engine_client.py::test_get_categories_online PASSED           [ 33%]
-tests/test_engine_client.py::test_get_categories_offline_fallback PASSED [ 41%]
-tests/test_engine_client.py::test_search_offline_fallback PASSED         [ 50%]
-tests/test_engine_client.py::test_search_with_custom_weights PASSED      [ 58%]
-tests/test_engine_client.py::test_product_breakdown_fallback PASSED      [ 66%]
-tests/test_engine_client.py::test_live_engine_health_and_company SKIPPED [ 75%]
-tests/test_engine_client.py::test_live_engine_categories_noise SKIPPED   [ 83%]
-tests/test_engine_client.py::test_live_engine_search_noise_products SKIPPED [ 91%]
-tests/test_engine_client.py::test_live_engine_category_filtering SKIPPED [100%]
-
-========================= 8 passed, 4 skipped in 0.23s =========================
+============================== 22 passed in 1.08s ==============================
