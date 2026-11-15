@@ -19,8 +19,9 @@ In compliance with the project directives, the application is strictly partition
 +-----------------------------------------------------------------------------------+
 |                        ENGINE 2: INTERFACE & ACCESS / UI                         |
 |   - Consumer Storefront (Port 8000)        - B2B Admin Console (Port 5000)       |
-|   - Recommendation Tuner (Vanilla JS)     - Real-Time 100% Weight Sum Meter      |
-|   - Responsive CSS Theme (Dark-Cyan)      - Shopping Cart & Checkout Views       |
+|   - Information Hiding / Clean Retail UI   - Recommendation Tuner (Weight Sandbox)|
+|   - Responsive CSS Theme (Dark-Cyan)      - Real-Time 100% Weight Sum Meter      |
+|   - Shopping Cart & Checkout Views        - Attribute & Category Management      |
 +-----------------------------------------------------------------------------------+
                                          │  ▲
                      HTTP REST / JSON    │  │  Client-Side DOM Events
@@ -34,7 +35,7 @@ In compliance with the project directives, the application is strictly partition
 +-----------------------------------------------------------------------------------+
                     │                                    │
     SQLAlchemy ORM  │                                    │  Automated Harness
-    Transactions    ▼                                    ▼  (61 + 68 = 129 Tests)
+    Transactions    ▼                                    ▼  (93 + 43 = 136 Tests)
 +----------------------------------+     +------------------------------------------+
 |    ENGINE 1: DATA & INTEGRITY    |     |      ENGINE 4: TESTING & VALIDATION      |
 |   - Pure RDBMS (SQLite / PG / SQL)|    |   - Excel Test Matrix (45 Scenarios)     |
@@ -88,7 +89,7 @@ In compliance with the project directives, the application is strictly partition
 * **Architecture**: Responsive, technical-minimalist frontend communicating with backend services via Jinja2 server-rendered templates and asynchronous JSON `fetch()` calls.
 * **Key Components**:
   1. **Clean Customer Storefront (Port 8000)**: Customer-facing retail experience. Adheres strictly to **Information Hiding**: internal algorithm weights, composite mathematical decimals, and ranking engine telemetry are never displayed to shoppers. Shoppers see clean retail badges (`★ 4.8 Rating`, `45h Battery`, `ANC: Yes`).
-  2. **Recommendation Tuner Modal (`storefront.js`)**: An interactive sliding drawer on `/shop` allowing shoppers to customize attribute priorities (e.g. 70% Battery Life, 30% Price) with instant client-side DOM re-ranking.
+  2. **Recommendation Tuner Sandbox (Port 5000 Admin Console)**: Interactive criteria weight simulation interface allowing merchants and ranking engineers to calibrate attribute weights (e.g. 70% Battery Life, 30% Price), test normalization formulas, and preview ranked outcomes while shielding retail shoppers.
   3. **Live 100% Weight Meter (`weight_check.js`)**: Real-time administrative indicator that validates criteria weights as the administrator types or drags sliders, dynamically toggling between green `[VALID: 100.0%]` and crimson `[INVALID: Imbalance]` badges.
   4. **Engine Status Health Banner**: Navbar status pill rendering green `[ENGINE: CONNECTED (PORT 5000)]` when the ranking service is live, and transitioning to amber `[ENGINE: OFFLINE (FALLBACK MODE)]` if the microservice is unreachable.
   5. **B2B Management Dashboard (Port 5000)**: Technical-minimalist dark-cyan design system using JetBrains Mono, crisp 1px borders, and responsive grid layouts for multi-tenant administration.
@@ -129,9 +130,9 @@ In compliance with the project directives, the application is strictly partition
   2. **Negative Scenarios (14 Cases)**: Verifies system error handling and security guards (rejecting weights $\ne 100\%$, rejecting negative prices or weights, blocking unauthenticated admin access, SQL injection sanitization, XSS escaping).
   3. **Edge Cases (11 Cases)**: Verifies extreme conditions (uniform values where $\min = \max$, empty categories with 0 products, categories with 0 active attributes, floating-point precision bounds, offline microservice fallback).
 * **Automated Pytest Harness**:
-  - `Product-Catalogue-Ranked-Search`: 61 automated tests (`test_models.py`, `test_engine.py`, `test_api.py`, `test_sponsor.py`, `test_routes.py`, `test_edge_cases.py`, `test_insights.py`).
-  - `e-commerce-website`: 68 automated tests (`test_storefront.py`, `test_admin.py`, `test_engine_client.py`).
-  - **Total**: 129 Automated Tests passing with 100% pass rate.
+  - `Product-Catalogue-Ranked-Search`: 93 automated tests (`test_models.py`, `test_engine.py`, `test_api.py`, `test_sponsor.py`, `test_routes.py`, `test_edge_cases.py`, `test_insights.py`).
+  - `e-commerce-website`: 43 automated tests (`test_storefront.py`, `test_admin.py`, `test_engine_client.py`).
+  - **Total**: 136 Automated Tests passing with 100% pass rate.
 * **Dedicated Excel Deliverable**: [`TEST_CASES_ENGINE4.xlsx`](file:///home/blue/Collage-Mini-Project/college_engine_deliverables/TEST_CASES_ENGINE4.xlsx) formatted with summary metrics and color-coded scenario tags.
 
 ---
@@ -172,9 +173,9 @@ In compliance with the project directives, the application is strictly partition
 > **Answer**:  
 > "The core philosophy is **Storefront Cleanliness and Information Hiding**. Retail shoppers should never see internal B2B algorithmic machinery—such as raw composite decimals (e.g. `0.8425`), algorithmic weights, or diagnostic rankings. Instead, shoppers experience an intuitive, clutter-free e-commerce store with familiar retail indicators: star ratings, review counts, battery hours, and stock availability."
 
-#### Q2.2: How does the Recommendation Tuner modal work on the frontend?
+#### Q2.2: How does the Recommendation Tuner work across the Storefront and Admin Console?
 > **Answer**:  
-> "When a shopper opens the Tuner on `/shop`, vanilla JavaScript reads the current attribute configuration for that category and renders interactive range sliders (0% to 100%). As the user moves the slider, an input event listener dynamically recalculates a local weighted score for each rendered product card in the DOM and re-orders the product card grid in real-time without requiring a full page refresh."
+> "To enforce strict **Information Hiding** and preserve retail cleanliness, the customer-facing Storefront intentionally omits weight sliders, raw formulas, and algorithmic score metrics. Retail shoppers experience a pure, clutter-free shopping journey where ranking happens seamlessly behind the scenes. In contrast, the administrative B2B console on Port 5000 (`/admin/sandbox` / category management) provides the interactive Recommendation Tuner sandbox. There, merchants and ranking engineers can adjust criteria weight sliders (0% to 100%), monitor the real-time 100% weight sum validation meter, simulate Min-Max normalization, and inspect live ranking telemetry before deploying weight profiles to production."
 
 #### Q2.3: How does the real-time 100% weight sum meter work in the administrative UI?
 > **Answer**:  

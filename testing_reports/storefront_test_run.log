@@ -1,0 +1,52 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.10, pytest-9.1.1, pluggy-1.6.0 -- /home/blue/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/blue/MiniProject/ECommerce-Site
+plugins: flask-1.3.0
+collecting ... collected 43 items
+
+tests/test_admin.py::test_admin_auth_required PASSED                     [  2%]
+tests/test_admin.py::test_admin_login_logout_flow PASSED                 [  4%]
+tests/test_admin.py::test_admin_dashboard PASSED                         [  6%]
+tests/test_admin.py::test_admin_products_list PASSED                     [  9%]
+tests/test_admin.py::test_admin_product_crud PASSED                      [ 11%]
+tests/test_admin.py::test_admin_ranking_engine_page PASSED               [ 13%]
+tests/test_admin.py::test_admin_ranking_engine_product_names_and_rankings PASSED [ 16%]
+tests/test_admin.py::test_admin_products_renders_engine_rank_metadata PASSED [ 18%]
+tests/test_admin.py::test_admin_api_engine_status PASSED                 [ 20%]
+tests/test_admin.py::test_admin_toggle_sponsored PASSED                  [ 23%]
+tests/test_admin.py::test_admin_product_rating_conversion PASSED         [ 25%]
+tests/test_engine_client.py::test_engine_client_init PASSED              [ 27%]
+tests/test_engine_client.py::test_health_check_online PASSED             [ 30%]
+tests/test_engine_client.py::test_health_check_offline PASSED            [ 32%]
+tests/test_engine_client.py::test_get_categories_online PASSED           [ 34%]
+tests/test_engine_client.py::test_get_categories_offline_fallback PASSED [ 37%]
+tests/test_engine_client.py::test_search_offline_fallback PASSED         [ 39%]
+tests/test_engine_client.py::test_search_with_custom_weights PASSED      [ 41%]
+tests/test_engine_client.py::test_product_breakdown_fallback PASSED      [ 44%]
+tests/test_engine_client.py::test_enrich_with_local_products_image_sync_existing PASSED [ 46%]
+tests/test_engine_client.py::test_enrich_with_local_products_auto_create_missing PASSED [ 48%]
+tests/test_engine_client.py::test_sync_product_to_engine_payload_includes_image PASSED [ 51%]
+tests/test_engine_client.py::test_live_engine_health_and_company PASSED  [ 53%]
+tests/test_engine_client.py::test_live_engine_categories_noise PASSED    [ 55%]
+tests/test_engine_client.py::test_live_engine_search_noise_products PASSED [ 58%]
+tests/test_engine_client.py::test_live_engine_category_filtering PASSED  [ 60%]
+tests/test_storefront.py::test_homepage PASSED                           [ 62%]
+tests/test_storefront.py::test_shop_page PASSED                          [ 65%]
+tests/test_storefront.py::test_product_detail PASSED                     [ 67%]
+tests/test_storefront.py::test_smart_rank_api PASSED                     [ 69%]
+tests/test_storefront.py::test_cart_operations PASSED                    [ 72%]
+tests/test_storefront.py::test_checkout_flow PASSED                      [ 74%]
+tests/test_storefront.py::test_checkout_out_of_stock_rejected PASSED     [ 76%]
+tests/test_storefront.py::test_search_synonyms_ear_phones PASSED         [ 79%]
+tests/test_storefront.py::test_search_synonyms_ear_pods PASSED           [ 81%]
+tests/test_storefront.py::test_search_headphones_whitespace_and_typos PASSED [ 83%]
+tests/test_storefront.py::test_search_typo_tolerance_and_whitespace PASSED [ 86%]
+tests/test_storefront.py::test_sorting_strategies PASSED                 [ 88%]
+tests/test_storefront.py::test_sponsored_pinned_at_rank_one PASSED       [ 90%]
+tests/test_storefront.py::test_storefront_hides_dynamic_weights PASSED   [ 93%]
+tests/test_storefront.py::test_shop_headphones_category PASSED           [ 95%]
+tests/test_storefront.py::test_product_detail_updates_image_from_engine_breakdown PASSED [ 97%]
+tests/test_storefront.py::test_product_detail_synthesizes_missing_product_with_image PASSED [100%]
+
+============================== 43 passed in 3.32s ==============================

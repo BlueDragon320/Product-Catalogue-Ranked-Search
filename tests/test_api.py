@@ -835,6 +835,119 @@ def test_api_product_image_url(client, app):
         assert p.image_url == new_img
 
 
+def test_api_health_endpoint(client):
+    """Test GET /api/v1/health returns 200 with standard health check payload."""
+    resp = client.get('/api/v1/health')
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['status'] == 'healthy'
+    assert data['service'] == 'Weighted Ranking Engine'
+    assert data['version'] == '2.0'
+
+
+def test_api_attributes_endpoint(client, app):
+    """Test GET /api/v1/attributes retrieves active attributes for tenant company."""
+    with app.app_context():
+        co = Company(name='Tenant Attr Co')
+        db.session.add(co)
+        db.session.commit()
+
+        cat1 = Category(name='Cat 1', company_id=co.company_id)
+        cat2 = Category(name='Cat 2', company_id=co.company_id)
+        db.session.add_all([cat1, cat2])
+        db.session.commit()
+
+        a1 = Attribute(category_id=cat1.category_id, name='Attr A', min_value=0, max_value=10, weight=100.0, is_active=True)
+        a2 = Attribute(category_id=cat2.category_id, name='Attr B', min_value=0, max_value=20, weight=100.0, is_active=True)
+        a3_inactive = Attribute(category_id=cat1.category_id, name='Attr Inactive', min_value=0, max_value=10, weight=0.0, is_active=False)
+        db.session.add_all([a1, a2, a3_inactive])
+        db.session.commit()
+
+        # Missing company_id
+        r_missing = client.get('/api/v1/attributes')
+        assert r_missing.status_code == 400
+
+        # Nonexistent company_id
+        r_nonexist = client.get('/api/v1/attributes?company_id=99999')
+        assert r_nonexist.status_code == 404
+
+        # All attributes for company
+        r_all = client.get(f'/api/v1/attributes?company_id={co.company_id}')
+        assert r_all.status_code == 200
+        attrs = r_all.get_json()['attributes']
+        assert len(attrs) == 2
+        names = [a['name'] for a in attrs]
+        assert 'Attr A' in names and 'Attr B' in names
+        assert 'Attr Inactive' not in names
+
+        # Filter by category
+        r_cat1 = client.get(f'/api/v1/attributes?company_id={co.company_id}&category_id={cat1.category_id}')
+        assert r_cat1.status_code == 200
+        attrs_cat1 = r_cat1.get_json()['attributes']
+        assert len(attrs_cat1) == 1
+        assert attrs_cat1[0]['name'] == 'Attr A'
+
+
+def test_api_custom_weights_nan_and_bounds_validation(client, app):
+    """Test that custom_weights rejects NaN, negative weights, and weights > 100."""
+    with app.app_context():
+        co = Company(name='Validation Co')
+        db.session.add(co)
+        db.session.commit()
+
+        cat = Category(name='Validation Cat', company_id=co.company_id)
+        db.session.add(cat)
+        db.session.commit()
+
+        a1 = Attribute(category_id=cat.category_id, name='Metric A', min_value=0, max_value=10, weight=50.0)
+        a2 = Attribute(category_id=cat.category_id, name='Metric B', min_value=0, max_value=10, weight=50.0)
+        db.session.add_all([a1, a2])
+        db.session.commit()
+
+        # Test NaN weight
+        r_nan = client.post(
+            f'/api/v1/search?company_id={co.company_id}',
+            json={'category_id': cat.category_id, 'custom_weights': {'Metric A': 'NaN', 'Metric B': 50.0}}
+        )
+        assert r_nan.status_code == 400
+        assert r_nan.get_json()['error'] == 'INVALID_WEIGHTS'
+
+        # Test negative weight
+        r_neg = client.post(
+            f'/api/v1/search?company_id={co.company_id}',
+            json={'category_id': cat.category_id, 'custom_weights': {'Metric A': -10.0, 'Metric B': 110.0}}
+        )
+        assert r_neg.status_code == 400
+        assert r_neg.get_json()['error'] == 'INVALID_WEIGHTS'
+
+        # Test weight > 100
+        r_gt100 = client.post(
+            f'/api/v1/search?company_id={co.company_id}',
+            json={'category_id': cat.category_id, 'custom_weights': {'Metric A': 120.0, 'Metric B': -20.0}}
+        )
+        assert r_gt100.status_code == 400
+        assert r_gt100.get_json()['error'] == 'INVALID_WEIGHTS'
+
+
+def test_api_search_log_records_company_id(client, app):
+    """Test that SearchLog records company_id properly."""
+    with app.app_context():
+        co = Company(name='Log Co')
+        db.session.add(co)
+        db.session.commit()
+
+        cat = Category(name='Log Cat', company_id=co.company_id)
+        db.session.add(cat)
+        db.session.commit()
+
+        client.get(f'/api/v1/search?company_id={co.company_id}&q=sample')
+        last_log = SearchLog.query.filter_by(company_id=co.company_id).first()
+        assert last_log is not None
+        assert last_log.company_id == co.company_id
+        assert last_log.query_text == 'sample'
+
+
+
 
 
 

@@ -8,44 +8,84 @@ cachedir: .pytest_cache
 rootdir: /home/blue/MiniProject/ECommerce-Site
 plugins: anyio-4.15.1, playwright-0.10.0, asyncio-1.4.0, platformdirs-4.14.5
 asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collecting ... collected 37 items
+collecting ... collected 45 items
 
 tests/test_admin.py::test_admin_auth_required PASSED                     [  2%]
-tests/test_admin.py::test_admin_login_logout_flow PASSED                 [  5%]
-tests/test_admin.py::test_admin_dashboard PASSED                         [  8%]
-tests/test_admin.py::test_admin_products_list PASSED                     [ 10%]
-tests/test_admin.py::test_admin_product_crud PASSED                      [ 13%]
-tests/test_admin.py::test_admin_ranking_engine_page PASSED               [ 16%]
-tests/test_admin.py::test_admin_ranking_engine_product_names_and_rankings PASSED [ 18%]
-tests/test_admin.py::test_admin_products_renders_engine_rank_metadata PASSED [ 21%]
-tests/test_admin.py::test_admin_api_engine_status PASSED                 [ 24%]
-tests/test_admin.py::test_admin_toggle_sponsored PASSED                  [ 27%]
-tests/test_admin.py::test_admin_product_rating_conversion PASSED         [ 29%]
-tests/test_engine_client.py::test_engine_client_init PASSED              [ 32%]
-tests/test_engine_client.py::test_health_check_online PASSED             [ 35%]
-tests/test_engine_client.py::test_health_check_offline PASSED            [ 37%]
-tests/test_engine_client.py::test_get_categories_online PASSED           [ 40%]
-tests/test_engine_client.py::test_get_categories_offline_fallback PASSED [ 43%]
-tests/test_engine_client.py::test_search_offline_fallback PASSED         [ 45%]
-tests/test_engine_client.py::test_search_with_custom_weights PASSED      [ 48%]
-tests/test_engine_client.py::test_product_breakdown_fallback PASSED      [ 51%]
-tests/test_engine_client.py::test_live_engine_health_and_company PASSED  [ 54%]
-tests/test_engine_client.py::test_live_engine_categories_noise PASSED    [ 56%]
-tests/test_engine_client.py::test_live_engine_search_noise_products PASSED [ 59%]
-tests/test_engine_client.py::test_live_engine_category_filtering PASSED  [ 62%]
-tests/test_storefront.py::test_homepage PASSED                           [ 64%]
-tests/test_storefront.py::test_shop_page PASSED                          [ 67%]
-tests/test_storefront.py::test_product_detail PASSED                     [ 70%]
-tests/test_storefront.py::test_smart_rank_api PASSED                     [ 72%]
-tests/test_storefront.py::test_cart_operations PASSED                    [ 75%]
-tests/test_storefront.py::test_checkout_flow PASSED                      [ 78%]
-tests/test_storefront.py::test_checkout_out_of_stock_rejected PASSED     [ 81%]
-tests/test_storefront.py::test_search_synonyms_ear_phones PASSED         [ 83%]
-tests/test_storefront.py::test_search_synonyms_ear_pods PASSED           [ 86%]
-tests/test_storefront.py::test_search_headphones_whitespace_and_typos PASSED [ 89%]
-tests/test_storefront.py::test_search_typo_tolerance_and_whitespace PASSED [ 91%]
-tests/test_storefront.py::test_sorting_strategies PASSED                 [ 94%]
-tests/test_storefront.py::test_sponsored_pinned_at_rank_one PASSED       [ 97%]
-tests/test_storefront.py::test_storefront_hides_dynamic_weights PASSED   [100%]
+tests/test_admin.py::test_admin_login_logout_flow PASSED                 [  4%]
+tests/test_admin.py::test_admin_dashboard PASSED                         [  6%]
+tests/test_admin.py::test_admin_products_list PASSED                     [  8%]
+tests/test_admin.py::test_admin_product_crud PASSED                      [ 11%]
+tests/test_admin.py::test_admin_ranking_engine_page PASSED               [ 13%]
+tests/test_admin.py::test_admin_ranking_engine_product_names_and_rankings PASSED [ 15%]
+tests/test_admin.py::test_admin_products_renders_engine_rank_metadata PASSED [ 17%]
+tests/test_admin.py::test_admin_api_engine_status PASSED                 [ 20%]
+tests/test_admin.py::test_admin_toggle_sponsored PASSED                  [ 22%]
+tests/test_admin.py::test_admin_product_rating_conversion PASSED         [ 24%]
+tests/test_engine_client.py::test_engine_client_init PASSED              [ 26%]
+tests/test_engine_client.py::test_health_check_online PASSED             [ 28%]
+tests/test_engine_client.py::test_health_check_offline PASSED            [ 31%]
+tests/test_engine_client.py::test_get_categories_online PASSED           [ 33%]
+tests/test_engine_client.py::test_get_categories_offline_fallback PASSED [ 35%]
+tests/test_engine_client.py::test_search_offline_fallback PASSED         [ 37%]
+tests/test_engine_client.py::test_search_with_custom_weights PASSED      [ 40%]
+tests/test_engine_client.py::test_product_breakdown_fallback PASSED      [ 42%]
+tests/test_engine_client.py::test_enrich_with_local_products_image_sync_existing PASSED [ 44%]
+tests/test_engine_client.py::test_enrich_with_local_products_auto_create_missing PASSED [ 46%]
+tests/test_engine_client.py::test_sync_product_to_engine_payload_includes_image PASSED [ 48%]
+tests/test_engine_client.py::test_live_engine_health_and_company SKIPPED [ 51%]
+tests/test_engine_client.py::test_live_engine_categories_noise SKIPPED   [ 53%]
+tests/test_engine_client.py::test_live_engine_search_noise_products SKIPPED [ 55%]
+tests/test_engine_client.py::test_live_engine_category_filtering SKIPPED [ 57%]
+tests/test_storefront.py::test_homepage PASSED                           [ 60%]
+tests/test_storefront.py::test_shop_page PASSED                          [ 62%]
+tests/test_storefront.py::test_product_detail PASSED                     [ 64%]
+tests/test_storefront.py::test_smart_rank_api PASSED                     [ 66%]
+tests/test_storefront.py::test_cart_operations PASSED                    [ 68%]
+tests/test_storefront.py::test_checkout_flow PASSED                      [ 71%]
+tests/test_storefront.py::test_checkout_out_of_stock_rejected PASSED     [ 73%]
+tests/test_storefront.py::test_search_synonyms_ear_phones PASSED         [ 75%]
+tests/test_storefront.py::test_search_synonyms_ear_pods PASSED           [ 77%]
+tests/test_storefront.py::test_search_headphones_whitespace_and_typos PASSED [ 80%]
+tests/test_storefront.py::test_search_typo_tolerance_and_whitespace PASSED [ 82%]
+tests/test_storefront.py::test_sorting_strategies PASSED                 [ 84%]
+tests/test_storefront.py::test_sponsored_pinned_at_rank_one PASSED       [ 86%]
+tests/test_storefront.py::test_storefront_hides_dynamic_weights PASSED   [ 88%]
+tests/test_storefront.py::test_shop_headphones_category PASSED           [ 91%]
+tests/test_storefront.py::test_product_detail_updates_image_from_engine_breakdown PASSED [ 93%]
+tests/test_storefront.py::test_product_detail_synthesizes_missing_product_with_image PASSED [ 95%]
+tests/test_storefront.py::test_cart_add_validation_invalid_quantity_and_out_of_stock FAILED [ 97%]
+tests/test_storefront.py::test_shop_json_filters_internal_ranking_metrics PASSED [100%]
 
-============================== 37 passed in 2.81s ==============================
+=================================== FAILURES ===================================
+__________ test_cart_add_validation_invalid_quantity_and_out_of_stock __________
+
+client = <FlaskClient <Flask 'app'>>, app = <Flask 'app'>
+
+    def test_cart_add_validation_invalid_quantity_and_out_of_stock(client, app):
+        """Test add_to_cart rejects quantity <= 0 and out_of_stock products."""
+        with app.app_context():
+            # Invalid quantity (<= 0)
+            resp_qty_zero = client.post(
+                '/cart/add/1',
+                json={'quantity': 0},
+                headers={'Accept': 'application/json'}
+            )
+            assert resp_qty_zero.status_code == 400
+            assert resp_qty_zero.get_json()['status'] == 'error'
+    
+            resp_qty_neg = client.post(
+                '/cart/add/1',
+                json={'quantity': -5},
+                headers={'Accept': 'application/json'}
+            )
+            assert resp_qty_neg.status_code == 400
+    
+            # Out of stock product
+>           p = db.session.get(Product, 1)
+                ^^
+E           NameError: name 'db' is not defined
+
+tests/test_storefront.py:349: NameError
+=========================== short test summary info ============================
+FAILED tests/test_storefront.py::test_cart_add_validation_invalid_quantity_and_out_of_stock
+=================== 1 failed, 40 passed, 4 skipped in 1.76s ====================

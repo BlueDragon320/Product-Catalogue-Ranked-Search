@@ -1,0 +1,23 @@
+🚀 Starting Noise E-Commerce Site on http://0.0.0.0:5001 (env: development)
+🔗 Ranking Engine URL: http://localhost:5000
+ * Serving Flask app 'app'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://10.11.0.221:5001
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 133-593-345
+127.0.0.1 - - [15/Nov/2026 11:01:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2026 11:01:35] "HEAD / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2026 11:01:35] "[32mHEAD /admin HTTP/1.1[0m" 302 -
+ * Detected change in '/home/blue/MiniProject/ECommerce-Site/app/storefront/routes.py', reloading
+🚀 Starting Noise E-Commerce Site on http://0.0.0.0:5001 (env: development)
+🔗 Ranking Engine URL: http://localhost:5000
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 133-593-345
+🚀 Starting Noise E-Commerce Site on http://0.0.0.0:5001 (env: development)
+🔗 Ranking Engine URL: http://localhost:5000

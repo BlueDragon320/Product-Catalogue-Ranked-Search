@@ -147,10 +147,12 @@ class SearchLog(db.Model):
     log_id = db.Column(db.Integer, primary_key=True)
     query_text = db.Column(db.String(200), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.category_id'), nullable=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.company_id'), nullable=True, index=True)
     results_count = db.Column(db.Integer, default=0)
     searched_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     category = db.relationship('Category', backref='search_logs')
+    company = db.relationship('Company', backref='search_logs')
 
     def __repr__(self):
         return f"<SearchLog query='{self.query_text}' results={self.results_count}>"

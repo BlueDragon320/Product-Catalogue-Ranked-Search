@@ -10,6 +10,7 @@ from flask import Flask, Blueprint, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 
 # ---------------------------------------------------------------------------
 # Extension instances (created at module level, bound to app inside factory)
@@ -19,6 +20,7 @@ migrate = Migrate()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 login_manager.login_message_category = 'info'
+csrf = CSRFProtect()
 
 # ---------------------------------------------------------------------------
 # Main blueprint — serves the index / home page
@@ -50,12 +52,13 @@ def create_app(config_name: str = 'development') -> Flask:
     app.config.from_object(config[config_name])
 
     # Ensure instance folder exists
-    os.makedirs(os.path.join(app.root_path, '..', 'instance'), exist_ok=True)
+    os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'instance'), exist_ok=True)
 
     # Initialize extensions with app
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    csrf.init_app(app)
 
     # Register the main (index) blueprint
     app.register_blueprint(main_bp)
@@ -82,6 +85,7 @@ def create_app(config_name: str = 'development') -> Flask:
     try:
         from .api import api as api_blueprint
         app.register_blueprint(api_blueprint, url_prefix='/api')
+        csrf.exempt(api_blueprint)
     except (ImportError, AttributeError):
         pass
 

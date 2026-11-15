@@ -1,3 +1,4 @@
+import math
 from datetime import datetime, date, timezone
 from flask import jsonify, request
 from flask_login import login_required
@@ -340,7 +341,16 @@ def search_products():
     # Dynamic Weight Personalization OR Default Scored Ranking
     if custom_weights and isinstance(custom_weights, dict) and category_id:
         try:
-            parsed_weights = {k: float(v) for k, v in custom_weights.items()}
+            parsed_weights = {}
+            for k, v in custom_weights.items():
+                w_val = float(v)
+                if math.isnan(w_val) or w_val < 0.0 or w_val > 100.0:
+                    return jsonify({
+                        'status': 'error',
+                        'error': 'INVALID_WEIGHTS',
+                        'message': 'Attribute weights must be numeric values between 0.0 and 100.0 and cannot be NaN.'
+                    }), 400
+                parsed_weights[k] = w_val
             weight_sum = sum(parsed_weights.values())
             if abs(weight_sum - 100.0) > 0.05:
                 return jsonify({
@@ -432,6 +442,7 @@ def search_products():
     log_entry = SearchLog(
         query_text=q or "*",
         category_id=category_id,
+        company_id=company_id,
         results_count=len(final_ranked_results),
         searched_at=datetime.now(timezone.utc)
     )
@@ -803,5 +814,72 @@ def update_product(product_id):
         'category_id': product.category_id,
         'composite_score': product.composite_score,
         'score_pct': format_score_display(product.composite_score or 0.0)
+    }), 200
+
+
+# -----------------------------------------------------------------------------
+# System Health & Attribute Exploration Endpoints
+# -----------------------------------------------------------------------------
+
+@api.route('/v1/health', methods=['GET'])
+@api.route('/health', methods=['GET'])
+def health():
+    """Service health check endpoint."""
+    return jsonify({
+        "status": "healthy",
+        "service": "Weighted Ranking Engine",
+        "version": "2.0"
+    }), 200
+
+
+@api.route('/v1/attributes', methods=['GET'])
+def get_attributes():
+    """
+    Get all active attributes for a tenant company, optionally filtered by category_id.
+    Parameters:
+      - company_id: (required) Tenant company ID
+      - category_id: (optional) Filter by category ID
+    """
+    company_id = get_request_company_id()
+    if not company_id:
+        return jsonify({'status': 'error', 'error': 'MISSING_COMPANY_ID', 'message': "Required parameter 'company_id' is missing."}), 400
+
+    company = db.session.get(Company, company_id)
+    if not company:
+        return jsonify({'status': 'error', 'error': 'COMPANY_NOT_FOUND', 'message': f"Company with ID {company_id} does not exist."}), 404
+
+    category_id = request.args.get('category_id')
+    query = Attribute.query.join(Category).filter(
+        Category.company_id == company_id,
+        Attribute.is_active == True
+    )
+    if category_id:
+        try:
+            category_id = int(category_id)
+            query = query.filter(Attribute.category_id == category_id)
+        except (ValueError, TypeError):
+            return jsonify({'status': 'error', 'error': 'INVALID_CATEGORY_ID', 'message': 'category_id must be an integer.'}), 400
+
+    attributes = query.all()
+    data = [
+        {
+            'attribute_id': a.attribute_id,
+            'category_id': a.category_id,
+            'category_name': a.category.name if a.category else None,
+            'name': a.name,
+            'data_type': a.data_type,
+            'weight': a.weight,
+            'min_value': a.min_value,
+            'max_value': a.max_value,
+            'lower_is_better': a.lower_is_better
+        }
+        for a in attributes
+    ]
+
+    return jsonify({
+        'status': 'success',
+        'company_id': company.company_id,
+        'company_name': company.name,
+        'attributes': data
     }), 200
 
