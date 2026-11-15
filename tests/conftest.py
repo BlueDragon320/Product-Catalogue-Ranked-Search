@@ -5,6 +5,10 @@ Author: Dev-A (Vaibhav) | Phase: P4
 Provides the app and client fixtures used across test_models.py,
 test_engine.py, test_sponsor.py, and test_routes.py.
 """
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import pytest
 from app import create_app, db as _db
 
