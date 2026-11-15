@@ -2,7 +2,7 @@
 Authentication routes (Login, Logout, Register).
 Implements FR: Auth Routes.
 """
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
 from urllib.parse import urlparse
 from app import db
@@ -25,6 +25,7 @@ def login():
             flash('Invalid username or password', 'error')
             return redirect(url_for('auth.login'))
         login_user(user, remember=form.remember_me.data)
+        session['admin_logged_in'] = True
         next_page = request.args.get('next')
         if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for('main.index')
@@ -40,8 +41,24 @@ def logout():
     Implements FR: User Logout.
     """
     logout_user()
+    session.pop('admin_logged_in', None)
     flash('You have been logged out.', 'info')
     return redirect(url_for('main.index'))
+
+@auth.route('/sso')
+def sso():
+    """
+    Single Sign-On endpoint for unified authentication between e-commerce store and ranking engine.
+    """
+    next_url = request.args.get('next') or url_for('admin.index')
+    if current_user.is_authenticated:
+        return redirect(next_url)
+    if session.get('admin_logged_in'):
+        user = User.query.filter_by(username='admin').first() or db.session.get(User, 1)
+        if user:
+            login_user(user)
+            return redirect(next_url)
+    return redirect(url_for('auth.login', next=next_url))
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():

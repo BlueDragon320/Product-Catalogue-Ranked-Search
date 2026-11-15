@@ -3,7 +3,9 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class BaseConfig:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard-to-guess-string'
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'noise-ecommerce-unified-secret-2026')
+    SESSION_COOKIE_NAME = 'noise_session'
+    SESSION_COOKIE_SAMESITE = 'Lax'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class DevelopmentConfig(BaseConfig):

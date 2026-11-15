@@ -24,12 +24,12 @@ def seed():
         db.session.add(superadmin)
         db.session.commit()
 
-        # 2. Create Tenant Company 1: TechMart Electronics
-        company1 = Company(name='TechMart Electronics')
+        # 2. Create Tenant Company 1: Noise Official
+        company1 = Company(name='Noise Official')
         db.session.add(company1)
         db.session.commit()
         
-        # Create company manager for TechMart
+        # Create company managers for Noise Official
         techmart_manager = User(
             username='techmart_admin',
             email='admin@techmart.com',
@@ -39,25 +39,19 @@ def seed():
         )
         techmart_manager.set_password('company123')
         db.session.add(techmart_manager)
-        db.session.commit()
 
-        # 3. Create Tenant Company 2: Apex Audio Labs
-        company2 = Company(name='Apex Audio Labs')
-        db.session.add(company2)
-        db.session.commit()
-
-        apex_manager = User(
-            username='apex_admin',
-            email='manager@apexaudio.com',
-            company_id=company2.company_id,
+        noise_manager = User(
+            username='noise_admin',
+            email='admin@gonoise.com',
+            company_id=company1.company_id,
             is_admin=True,
             is_superadmin=False
         )
-        apex_manager.set_password('company123')
-        db.session.add(apex_manager)
+        noise_manager.set_password('company123')
+        db.session.add(noise_manager)
         db.session.commit()
         
-        # 4. TechMart Categories: Wireless Earbuds
+        # 3. Noise Official Categories: Wireless Earbuds
         earbuds = Category(name='Wireless Earbuds', company_id=company1.company_id)
         db.session.add(earbuds)
         db.session.commit()
@@ -100,7 +94,7 @@ def seed():
         db.session.commit()
         recompute_category_scores(earbuds.category_id, db.session, Product, Attribute, ProductAttrValue)
         
-        # TechMart Category: Budget Laptops
+        # Noise Official Category: Budget Laptops
         laptops = Category(name='Budget Laptops', company_id=company1.company_id)
         db.session.add(laptops)
         db.session.commit()
@@ -132,39 +126,8 @@ def seed():
         
         db.session.commit()
         recompute_category_scores(laptops.category_id, db.session, Product, Attribute, ProductAttrValue)
-        
-        # 5. Apex Audio Category: Studio Monitors
-        studio = Category(name='Studio Monitors', company_id=company2.company_id)
-        db.session.add(studio)
-        db.session.commit()
 
-        clarity = Attribute(name='Acoustic Clarity (%)', category_id=studio.category_id,
-                            min_value=0, max_value=100, weight=50.0)
-        studio_price = Attribute(name='Price (INR)', category_id=studio.category_id,
-                                min_value=10000, max_value=60000, weight=50.0, lower_is_better=True)
-        studio_rating = Attribute(name='Rating', category_id=studio.category_id,
-                                  data_type='numeric', min_value=0.0, max_value=5.0,
-                                  weight=0.0, lower_is_better=False, is_active=True)
-        db.session.add_all([clarity, studio_price, studio_rating])
-        db.session.commit()
-
-        monitors_data = [
-            ('Yamaha HS5', {'clarity': 92, 'price': 28500, 'rating': 4.6}, 67),
-            ('KRK Rokit 5 G4', {'clarity': 88, 'price': 24900, 'rating': 4.4}, 51),
-            ('JBL 305P MkII', {'clarity': 86, 'price': 21000, 'rating': 4.3}, 43),
-        ]
-        for name, values, hits in monitors_data:
-            product = Product(name=name, category_id=studio.category_id, search_count=hits)
-            db.session.add(product)
-            db.session.flush()
-            for attr, val in [(clarity, values['clarity']), (studio_price, values['price']), (studio_rating, values['rating'])]:
-                pav = ProductAttrValue(product_id=product.product_id, attribute_id=attr.attribute_id, raw_value=val)
-                db.session.add(pav)
-
-        db.session.commit()
-        recompute_category_scores(studio.category_id, db.session, Product, Attribute, ProductAttrValue)
-
-        # 6. Sponsored Placement (Anti-bias capped at slot 1)
+        # 4. Sponsored Placement (Anti-bias capped at slot 1)
         boat = Product.query.filter_by(name='boAt Airdopes 141').first()
         if boat:
             sp = SponsoredPlacement(
@@ -177,14 +140,13 @@ def seed():
             db.session.add(sp)
             db.session.commit()
 
-        # 7. Seed Search Analytics Logs
+        # 5. Seed Search Analytics Logs
         demo_queries = [
             ('noise cancelling earbuds', earbuds.category_id, 4),
             ('boAt Airdopes', earbuds.category_id, 1),
             ('budget student laptop', laptops.category_id, 3),
             ('Sony audio', earbuds.category_id, 1),
             ('Dell Inspiron', laptops.category_id, 1),
-            ('studio monitor speakers', studio.category_id, 3),
             ('AirPods Pro', earbuds.category_id, 1),
             ('lightweight laptops under 50k', laptops.category_id, 2),
         ]
@@ -200,10 +162,9 @@ def seed():
         
         print('✅ Database seeded successfully!')
         print('   Platform Superadmin: admin / admin123 (Full Tenant Management & Inspection)')
-        print(f'   Tenant 1: {company1.name} (Manager: techmart_admin / company123)')
-        print(f'   Tenant 2: {company2.name} (Manager: apex_admin / company123)')
-        print('   Categories: Wireless Earbuds (7), Budget Laptops (5), Studio Monitors (3)')
-        print('   Search Analytics: 8 query logs, populated hit counters')
+        print(f'   Tenant 1: {company1.name} (Managers: noise_admin, techmart_admin / company123)')
+        print('   Categories: Wireless Earbuds (7), Budget Laptops (5)')
+        print('   Search Analytics: 7 query logs, populated hit counters')
 
 if __name__ == '__main__':
     seed()

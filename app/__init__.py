@@ -85,9 +85,24 @@ def create_app(config_name: str = 'development') -> Flask:
     except (ImportError, AttributeError):
         pass
 
+    @app.before_request
+    def check_unified_sso_session():
+        from flask import session
+        from flask_login import current_user, login_user
+        try:
+            if session.get('admin_logged_in') and not current_user.is_authenticated:
+                from .models import User
+                user = User.query.filter_by(username='admin').first() or db.session.get(User, 1)
+                if user:
+                    login_user(user)
+        except Exception:
+            pass
+
     # Create all tables within app context
     with app.app_context():
         from . import models  # noqa: F401 — ensures models are registered
         db.create_all()
+        from .ranking.helpers import ensure_all_categories_have_default_attributes
+        ensure_all_categories_have_default_attributes(db.session)
 
     return app

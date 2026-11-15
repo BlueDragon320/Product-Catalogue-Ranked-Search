@@ -1,19 +1,19 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from . import db, login_manager
 
 class Company(db.Model):
     """
-    Represents a company/tenant using the platform.
+    Represents a company using the platform.
     """
     __tablename__ = 'companies'
     company_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     users = db.relationship('User', backref='company', lazy='dynamic')
-    categories = db.relationship('Category', backref='company', lazy='dynamic')
+    categories = db.relationship('Category', backref='company', lazy='dynamic', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"<Company {self.name}>"
@@ -26,11 +26,11 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, index=True, nullable=False)
     email = db.Column(db.String(120), unique=True, index=True, nullable=False)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(256))
     company_id = db.Column(db.Integer, db.ForeignKey('companies.company_id'), index=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_superadmin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def set_password(self, password: str) -> None:
         """Sets the user password hash."""
@@ -46,7 +46,7 @@ class User(UserMixin, db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     """Loads user for Flask-Login."""
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 class Category(db.Model):
     """
@@ -56,12 +56,12 @@ class Category(db.Model):
     category_id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.company_id'), index=True)
     name = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     display_attr_1 = db.Column(db.String(100), nullable=True)
     display_attr_2 = db.Column(db.String(100), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    attributes = db.relationship('Attribute', backref='category', lazy='dynamic')
-    products = db.relationship('Product', backref='category', lazy='dynamic')
+    attributes = db.relationship('Attribute', backref='category', lazy='dynamic', cascade='all, delete-orphan')
+    products = db.relationship('Product', backref='category', lazy='dynamic', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"<Category {self.name}>"
@@ -80,7 +80,7 @@ class Attribute(db.Model):
     weight = db.Column(db.Float, default=1.0)
     lower_is_better = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
         return f"<Attribute {self.name}>"
@@ -96,11 +96,11 @@ class Product(db.Model):
     composite_score = db.Column(db.Float, default=0.0)
     search_count = db.Column(db.Integer, default=0)
     is_sponsored = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    attribute_values = db.relationship('ProductAttrValue', backref='product', lazy='dynamic')
-    sponsored_placements = db.relationship('SponsoredPlacement', backref='product', lazy='dynamic')
+    attribute_values = db.relationship('ProductAttrValue', backref='product', lazy='dynamic', cascade='all, delete-orphan')
+    sponsored_placements = db.relationship('SponsoredPlacement', backref='product', lazy='dynamic', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"<Product {self.name}>"
@@ -147,7 +147,7 @@ class SearchLog(db.Model):
     query_text = db.Column(db.String(200), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.category_id'), nullable=True)
     results_count = db.Column(db.Integer, default=0)
-    searched_at = db.Column(db.DateTime, default=datetime.utcnow)
+    searched_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     category = db.relationship('Category', backref='search_logs')
 
