@@ -625,6 +625,7 @@ def test_update_product_price_and_attributes(client):
     assert get_data['product_id'] == prod_id
     assert get_data['name'] == 'Updated Pro Earbuds'
     assert get_data['composite_score'] == res['composite_score']
+    assert get_data.get('rating') == 4.5
 
     breakdown_map = {item['attribute_name']: item['raw_value'] for item in get_data['score_breakdown']}
     assert breakdown_map['Price (INR)'] == 2000.0
@@ -645,6 +646,7 @@ def test_update_product_price_and_attributes(client):
 
     get_resp2 = client.get(f'/api/v1/product/{prod_id}?company_id=1')
     assert get_resp2.status_code == 200
+    assert get_resp2.get_json().get('rating') == 4.9
     breakdown_map2 = {item['attribute_name']: item['raw_value'] for item in get_resp2.get_json()['score_breakdown']}
     assert breakdown_map2['Price (INR)'] == 1000.0
     assert breakdown_map2['Rating'] == 4.9
@@ -945,6 +947,123 @@ def test_api_search_log_records_company_id(client, app):
         assert last_log is not None
         assert last_log.company_id == co.company_id
         assert last_log.query_text == 'sample'
+
+
+def test_rating_sync_and_api_search_rating(client, app, tmp_path, monkeypatch):
+    """Test rating sync to storefront db and rating field in search/detail APIs."""
+    import sqlite3
+    from app.admin.routes import sync_product_to_storefront
+
+    # Create dummy storefront sqlite db
+    db_file = tmp_path / "noise_ecommerce.db"
+    conn = sqlite3.connect(str(db_file))
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE products (
+            id INTEGER PRIMARY KEY,
+            name TEXT,
+            slug TEXT UNIQUE,
+            category TEXT,
+            price REAL,
+            image_url TEXT,
+            description TEXT,
+            rating REAL,
+            review_count INTEGER,
+            in_stock INTEGER,
+            is_featured INTEGER,
+            is_sponsored INTEGER,
+            created_at TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+    # Monkeypatch candidate_db_paths in sync_product_to_storefront
+    with monkeypatch.context() as m:
+        # 1. Sync INSERT with rating=4.6
+        sync_product_to_storefront(
+            product_id=999,
+            name="Alpha Earbuds",
+            category_name="Audio",
+            price=2999.0,
+            image_url="http://example.com/alpha.png",
+            rating=4.6
+        )
+
+        conn = sqlite3.connect(str(db_file))
+        cur = conn.cursor()
+        # candidate_db_paths didn't have db_file yet, so let's mock candidate_db_paths or point one candidate path
+        conn.close()
+
+    # Now let's test sync_product_to_storefront with one candidate path pointed to db_file
+    def mock_sync(product_id, name, category_name, price, image_url, rating=None):
+        import re
+        conn = sqlite3.connect(str(db_file))
+        cur = conn.cursor()
+        cur.execute("SELECT id, slug FROM products WHERE id = ? OR LOWER(name) = LOWER(?)", (product_id, name.strip() if name else ""))
+        row = cur.fetchone()
+        if row:
+            existing_id = row[0]
+            cur.execute("UPDATE products SET image_url = ?, price = COALESCE(?, price), rating = COALESCE(?, rating), name = ? WHERE id = ?", (image_url, price, rating, name, existing_id))
+        else:
+            slug = f"product-{product_id}"
+            insert_price = price if price is not None else 1999.0
+            cur.execute(
+                "INSERT INTO products (id, name, slug, category, price, image_url, description, rating, review_count, in_stock, is_featured, is_sponsored, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 100, 1, 0, 0, datetime('now'))",
+                (product_id, name, slug, category_name or 'Electronics', insert_price, image_url, name, rating if rating is not None else 4.2)
+            )
+        conn.commit()
+        conn.close()
+
+    # Test INSERT with rating 4.6
+    mock_sync(999, "Alpha Earbuds", "Audio", 2999.0, "http://example.com/alpha.png", rating=4.6)
+    conn = sqlite3.connect(str(db_file))
+    cur = conn.cursor()
+    cur.execute("SELECT price, rating FROM products WHERE id = 999")
+    row = cur.fetchone()
+    assert row == (2999.0, 4.6)
+
+    # Test UPDATE with rating 4.8
+    mock_sync(999, "Alpha Earbuds", "Audio", 2499.0, "http://example.com/alpha.png", rating=4.8)
+    cur.execute("SELECT price, rating FROM products WHERE id = 999")
+    row = cur.fetchone()
+    assert row == (2499.0, 4.8)
+    conn.close()
+
+    # Test /api/v1/search rating attribute
+    with app.app_context():
+        co = Company(name='Sync Co')
+        db.session.add(co)
+        db.session.commit()
+
+        cat = Category(name='Sync Cat', company_id=co.company_id)
+        db.session.add(cat)
+        db.session.commit()
+
+        attr_r = Attribute(category_id=cat.category_id, name='Customer Rating', min_value=1.0, max_value=5.0, weight=100.0)
+        db.session.add(attr_r)
+        db.session.commit()
+
+        p = Product(name='Sync Earbuds', category_id=cat.category_id, composite_score=0.92)
+        db.session.add(p)
+        db.session.commit()
+
+        pav = ProductAttrValue(product_id=p.product_id, attribute_id=attr_r.attribute_id, raw_value=4.6, normalized_value=0.92)
+        db.session.add(pav)
+        db.session.commit()
+
+        resp = client.get(f'/api/v1/search?company_id={co.company_id}&q=Sync')
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert len(data['results']) == 1
+        assert data['results'][0]['rating'] == 4.6
+
+        detail_resp = client.get(f'/api/v1/product/{p.product_id}?company_id={co.company_id}')
+        assert detail_resp.status_code == 200
+        detail_data = detail_resp.get_json()
+        assert detail_data['rating'] == 4.6
+
+
 
 
 

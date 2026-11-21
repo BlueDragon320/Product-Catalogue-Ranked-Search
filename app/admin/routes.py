@@ -518,7 +518,7 @@ def list_products(category_id):
         format_score=format_score_display
     )
 
-def sync_product_to_storefront(product_id, name, category_name, price, image_url):
+def sync_product_to_storefront(product_id, name, category_name, price, image_url, rating=None):
     """
     Directly synchronizes product updates/creations to storefront SQLite database(s).
     """
@@ -557,8 +557,8 @@ def sync_product_to_storefront(product_id, name, category_name, price, image_url
             if row:
                 existing_id = row[0]
                 cur.execute(
-                    "UPDATE products SET image_url = ?, price = COALESCE(?, price), name = ? WHERE id = ?",
-                    (image_url, price, name, existing_id)
+                    "UPDATE products SET image_url = ?, price = COALESCE(?, price), rating = COALESCE(?, rating), name = ? WHERE id = ?",
+                    (image_url, price, rating, name, existing_id)
                 )
             else:
                 base_slug = re.sub(r'[^a-z0-9]+', '-', (name or f'product-{product_id}').lower()).strip('-')
@@ -577,8 +577,8 @@ def sync_product_to_storefront(product_id, name, category_name, price, image_url
                 cur.execute(
                     """INSERT INTO products 
                     (id, name, slug, category, price, image_url, description, rating, review_count, in_stock, is_featured, is_sponsored, created_at) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 4.2, 100, 1, 0, 0, datetime('now'))""",
-                    (product_id, name, slug, category_name or 'Electronics', insert_price, image_url, description)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 100, 1, 0, 0, datetime('now'))""",
+                    (product_id, name, slug, category_name or 'Electronics', insert_price, image_url, description, rating if rating is not None else 4.2)
                 )
 
             conn.commit()
@@ -675,12 +675,19 @@ def new_product(category_id):
                     if attr_obj and 'price' in attr_obj.name.strip().lower() and pav.raw_value is not None:
                         price_val = pav.raw_value
                         break
+            rating_val = None
+            for pav in ProductAttrValue.query.filter_by(product_id=product.product_id).all():
+                attr_obj = db.session.get(Attribute, pav.attribute_id)
+                if attr_obj and 'rating' in attr_obj.name.strip().lower() and pav.raw_value is not None:
+                    rating_val = pav.raw_value
+                    break
             sync_product_to_storefront(
                 product_id=product.product_id,
                 name=product.name,
                 category_name=category.name,
                 price=price_val,
-                image_url=product.image_url
+                image_url=product.image_url,
+                rating=rating_val
             )
         except Exception:
             pass
@@ -794,12 +801,19 @@ def edit_product(product_id):
                     if attr_obj and 'price' in attr_obj.name.strip().lower() and pav.raw_value is not None:
                         price_val = pav.raw_value
                         break
+            rating_val = None
+            for pav in ProductAttrValue.query.filter_by(product_id=product.product_id).all():
+                attr_obj = db.session.get(Attribute, pav.attribute_id)
+                if attr_obj and 'rating' in attr_obj.name.strip().lower() and pav.raw_value is not None:
+                    rating_val = pav.raw_value
+                    break
             sync_product_to_storefront(
                 product_id=product.product_id,
                 name=product.name,
                 category_name=category.name,
                 price=price_val,
-                image_url=product.image_url
+                image_url=product.image_url,
+                rating=rating_val
             )
         except Exception:
             pass

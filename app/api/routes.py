@@ -520,6 +520,12 @@ def search_products():
                     if len(badges) == 2:
                         break
 
+        rating_val = None
+        for a_name, a_info in attrs_data.items():
+            if 'rating' in a_name.lower():
+                rating_val = a_info['raw_value']
+                break
+
         results_data.append({
             'rank': rank_idx,
             'product_id': prod.product_id,
@@ -529,6 +535,7 @@ def search_products():
             'category_name': prod_cat.name if prod_cat else None,
             'composite_score': prod.composite_score,
             'score_pct': format_score_display(prod.composite_score or 0.0),
+            'rating': rating_val,
             'is_sponsored': is_sp,
             'display_badges': badges,
             'attributes': attrs_data
@@ -626,6 +633,12 @@ def get_product(product_id):
     pavs = ProductAttrValue.query.filter_by(product_id=product.product_id).all()
     breakdown = get_score_breakdown(product, attributes, pavs)
 
+    rating_val = None
+    for b in breakdown:
+        if 'rating' in b.get('attribute_name', '').lower():
+            rating_val = b.get('raw_value')
+            break
+
     today = date.today()
     is_sponsored = (
         bool(getattr(product, 'is_sponsored', False)) or
@@ -648,6 +661,7 @@ def get_product(product_id):
         'category_name': category.name,
         'composite_score': product.composite_score,
         'score_pct': format_score_display(product.composite_score or 0.0),
+        'rating': rating_val,
         'search_count': product.search_count or 0,
         'is_sponsored': is_sponsored,
         'score_breakdown': breakdown
@@ -801,7 +815,9 @@ def update_product(product_id):
         cat_name = product.category.name if product.category else None
         price_attr = next((a for a in category_attrs if 'price' in a.name.lower()), None)
         sync_price = updates.get(price_attr) if price_attr else None
-        sync_product_to_storefront(product.product_id, product.name, cat_name, sync_price, product.image_url)
+        rating_attr = next((a for a in category_attrs if 'rating' in a.name.lower()), None)
+        sync_rating = updates.get(rating_attr) if rating_attr else None
+        sync_product_to_storefront(product.product_id, product.name, cat_name, sync_price, product.image_url, rating=sync_rating)
     except Exception:
         pass
 
